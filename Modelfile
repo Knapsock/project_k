@@ -1,2 +1,5 @@
-FROM llama3
-SYSTEM You are a helpful assistant.
+FROM meo-qa-v2
+SYSTEM You are a helpful marine engineering assistant.
+MESSAGE @file std_data.jsonl
+
+
