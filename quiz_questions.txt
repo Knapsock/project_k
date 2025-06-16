@@ -1,0 +1,104 @@
+[mcq_easy] What is the full form of BOD?
+A. Biological Oxygen Demand
+B. Biochemical Oxide Detection
+C. Basic Organic Density
+D. Boiler Output Design
+Answer: A
+
+[mcq_easy] What causes water hammer in pipes?
+A. Excessive pressure
+B. Sudden valve closure
+C. High temperature
+D. Low flow velocity
+Answer: B
+
+[mcq_easy] What is the main function of a turbocharger?
+A. Reduce noise
+B. Improve fuel economy
+C. Increase air intake pressure
+D. Cool engine oil
+Answer: C
+
+[mcq_easy] What is typically used to measure temperature?
+A. Barometer
+B. Thermometer
+C. Anemometer
+D. Voltmeter
+Answer: B
+
+[mcq_easy] Which part stores fuel in a ship engine system?
+A. Governor
+B. Crankshaft
+C. Fuel tank
+D. Air filter
+Answer: C
+
+[mcq_easy] What color indicates overheating in exhaust?
+A. Blue
+B. White
+C. Yellow
+D. Red
+Answer: D
+
+[mcq_easy] What is used to clean fuel?
+A. Separator
+B. Filter
+C. Blower
+D. Condenser
+Answer: A
+
+[mcq_easy] What parameter is adjusted in fuel injection timing?
+A. Oil pressure
+B. Ignition delay
+C. Injector angle
+D. Fuel temperature
+Answer: B
+
+[mcq_easy] How often should engine oil be changed?
+A. Every 2 hours
+B. Every trip
+C. As per maintenance schedule
+D. When it smells burnt
+Answer: C
+
+[mcq_easy] What is a symptom of worn piston rings?
+A. Increased fuel economy
+B. White smoke
+C. Blue smoke
+D. Loud knocking
+Answer: C
+
+[mcq_easy] What does a governor control?
+A. Fuel quantity
+B. Air temperature
+C. Exhaust pressure
+D. Engine noise
+Answer: A
+
+[mcq_easy] Which of the following is NOT part of a four-stroke cycle?
+A. Intake
+B. Combustion
+C. Exhaust
+D. Compression
+Answer: B
+
+[mcq_easy] What tool is used to check fuel pressure?
+A. Thermocouple
+B. Multimeter
+C. Pressure gauge
+D. Flow meter
+Answer: C
+
+[mcq_easy] What does the crankshaft connect to?
+A. Cylinder head
+B. Connecting rod
+C. Fuel injector
+D. Oil cooler
+Answer: B
+
+[mcq_easy] What is the ideal pH of cooling water?
+A. 3
+B. 5
+C. 7
+D. 9
+Answer: D
