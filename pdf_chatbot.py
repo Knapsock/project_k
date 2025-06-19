@@ -1,338 +1,252 @@
-import sqlite3
+import os
 import random
-import threading
-import time
-from PIL import Image
-from tkinter import PhotoImage
-import pytesseract
-import speech_recognition as sr
-import pyttsx3
-from langchain_ollama import OllamaLLM, OllamaEmbeddings
+import sqlite3
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox, filedialog, simpledialog, Toplevel
+from PIL import Image, ImageTk
 from langchain_community.document_loaders import PyPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
 from langchain.chains import ConversationalRetrievalChain
 from langchain.memory import ConversationBufferMemory
-import tkinter as tk
-from tkinter import filedialog, scrolledtext, messagebox, simpledialog
-
-# --- Voice I/O Setup ---
-recognizer = sr.Recognizer()
-engine = pyttsx3.init()
-engine.setProperty('rate', 160)
-
-def speak(text):
-    engine.say(text)
-    engine.runAndWait()
-
-def listen():
-    with sr.Microphone() as source:
-        try:
-            audio = recognizer.listen(source, timeout=5)
-            return recognizer.recognize_google(audio)
-        except:
-            return ""
-
-# Ask user if voice input should be enabled
-enable_voice = messagebox.askyesno("Voice Input", "Do you want to enable voice input?")
-
-# --- Load PDF ---
-loader = PyPDFLoader("dvsdv.pdf")
-pages = loader.load()
-splitter = RecursiveCharacterTextSplitter(chunk_size=500, chunk_overlap=50)
-chunks = splitter.split_documents(pages)
-
-embedding = OllamaEmbeddings(model="nomic-embed-text")
-vectordb = Chroma.from_documents(chunks, embedding=embedding, persist_directory="./vector_store")
-retriever = vectordb.as_retriever()
-
-llm = OllamaLLM(model="meo-qa-v2")
-memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
-qa = ConversationalRetrievalChain.from_llm(llm=llm, retriever=retriever, memory=memory)
-
-# --- Load Quiz Questions ---
-def load_quiz_questions(file_path="quiz_questions.txt"):
-    questions = {"easy": [], "medium": [], "hard": [], "mcq_easy": []}
-    try:
-        with open(file_path, "r", encoding="utf-8") as f:
-            lines = f.readlines()
-            i = 0
-            while i < len(lines):
-                line = lines[i].strip()
-                if line.startswith("[mcq_easy]"):
-                    q = line[10:].strip()
-                    options = [lines[i+1].strip(), lines[i+2].strip(), lines[i+3].strip(), lines[i+4].strip()]
-                    answer_line = lines[i+5].strip()
-                    correct = answer_line.split(":")[1].strip()
-                    questions["mcq_easy"].append({
-                        "question": q,
-                        "options": options,
-                        "answer": correct
-                    })
-                    i += 6
-                elif line.startswith("[easy]"):
-                    questions["easy"].append(line[6:].strip())
-                    i += 1
-                elif line.startswith("[medium]"):
-                    questions["medium"].append(line[8:].strip())
-                    i += 1
-                elif line.startswith("[hard]"):
-                    questions["hard"].append(line[6:].strip())
-                    i += 1
-                else:
-                    i += 1
-    except Exception as e:
-        print(f"Error loading quiz: {e}")
-    return questions
-
-quiz_questions = load_quiz_questions()
-
-# --- SQLite ---
-conn = sqlite3.connect("quiz_scores.db")
-cursor = conn.cursor()
-cursor.execute("""
-CREATE TABLE IF NOT EXISTS scores (
-    id INTEGER PRIMARY KEY AUTOINCREMENT,
-    user TEXT,
-    score INTEGER,
-    total INTEGER,
-    timestamp DATETIME DEFAULT CURRENT_TIMESTAMP
-)
-""")
-conn.commit()
-
-def save_score(user, score, total):
-    cursor.execute("INSERT INTO scores (user, score, total) VALUES (?, ?, ?)", (user, score, total))
-    conn.commit()
-
-# --- Image OCR ---
-def process_image(image_path):
-    try:
-        image = Image.open(image_path)
-        return pytesseract.image_to_string(image).strip()
-    except Exception as e:
-        return f"Error: {e}"
-
-# --- GUI Setup ---
-def choose_avatar():
-    global avatar_path
-    path = filedialog.askopenfilename(filetypes=[("Image Files", "*.png;*.jpg;*.jpeg")])
-    if path:
-        avatar_path = path
-        try:
-            img = Image.open(avatar_path).resize((60, 60))
-            avatar_img = ImageTk.PhotoImage(img)
-            avatar_label.config(image=avatar_img)
-            avatar_label.image = avatar_img  # Keep reference to avoid garbage collection
-        except Exception as e:
-            messagebox.showerror("Error", f"Could not load avatar: {e}")
-
-app = tk.Tk()
-app.title("PDF Chatbot")
-app.geometry("700x600")
-avatar_label = tk.Label(app)
-avatar_label.pack(pady=(5, 0))
-
-btn_avatar = tk.Button(app, text="👤 Choose Avatar", command=choose_avatar)
-btn_avatar.pack(pady=(0, 10))
-
-user_input = tk.StringVar()
-
-# Theme toggle logic
-def toggle_theme():
-    global dark_mode
-    dark_mode = not dark_mode
-    apply_theme()
-
-def apply_theme():
-    bg_color = "#2e2e2e" if dark_mode else "#ffffff"
-    fg_color = "#ffffff" if dark_mode else "#000000"
-
-    app.configure(bg=bg_color)
-    chat_box.configure(bg=bg_color, fg=fg_color, insertbackground=fg_color)
-    entry.configure(bg=bg_color, fg=fg_color, insertbackground=fg_color)
-    for child in frame.winfo_children():
-        try:
-            child.configure(bg=bg_color, fg=fg_color)
-        except:
-            pass
-
-user_name = simpledialog.askstring("User Name", "Enter your name")
-avatar_path = None  # Global to store the avatar image path
+from langchain_ollama import OllamaEmbeddings, OllamaLLM
+import matplotlib.pyplot as plt
+from io import BytesIO
 
 
-chat_box = scrolledtext.ScrolledText(app, wrap=tk.WORD)
-chat_box.pack(padx=10, pady=10, fill=tk.BOTH, expand=True)
+class MaritimeChatbot:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("Maritime Expert Assistant")
+        self.root.geometry("1000x750")
+        self.theme = "light"
+        self.configure_theme()
 
-entry = tk.Entry(app, font=("Arial", 14))
-entry.pack(fill=tk.X, padx=10, pady=5)
+        self.qa_chain = None
+        self.current_pdf = None
+        self.mcq_bank = self._load_mcq_database()
+        self.mcq_mode = False
+        self.current_question_index = 0
+        self.user_score = 0
 
-frame = tk.Frame(app)
-frame.pack(pady=10)
+        self.setup_ui()
+        self.setup_database()
+        self.load_sample_pdf()
 
-btn_mcq = tk.Button(frame, text="📝 MCQ Quiz", command=lambda: start_mcq_quiz())
-btn_mcq.grid(row=1, column=0, padx=5)
-
-btn_timer = tk.Label(frame, text="⏳")
-btn_timer.grid(row=1, column=1, padx=5)
-
-# --- MCQ Quiz Handler ---
-def start_mcq_quiz():
-    mode = simpledialog.askstring("Quiz Mode", "Select difficulty: easy / medium / hard")
-    if mode not in quiz_questions:
-        chat_box.insert(tk.END, "Invalid mode. Please choose: easy, medium, or hard.\n")
-        return
-
-    questions = quiz_questions[mode]
-    if len(questions) < 15:
-        chat_box.insert(tk.END, "Not enough questions in this mode.\n")
-        return
-
-    score = 0
-    attempted = 0
-    total = 15
-    quiz_running = True
-
-    def on_timeout():
-        nonlocal quiz_running
-        quiz_running = False
-        timer_window.destroy()
-        messagebox.showinfo("Timeout", "Time's up for this question!")
-
-    for q in random.sample(questions, k=total):
-        if not quiz_running:
-            break
-
-        # --- Parse Question ---
-        try:
-            question, *opts, correct = q.split("|")
-        except:
-            chat_box.insert(tk.END, f"Question format error: {q}\n")
-            continue
-
-        # --- Ask Question ---
-        chat_box.insert(tk.END, f"\n🤖 (MCQ) {question.strip()}\n")
-        opt_labels = ['A', 'B', 'C', 'D']
-        options_dict = dict(zip(opt_labels, opts))
-
-        for label, opt in options_dict.items():
-            chat_box.insert(tk.END, f"{label}. {opt.strip()}\n")
-
-        # --- Show Timer Window ---
-        timer_window = tk.Toplevel(app)
-        timer_window.title("⏰ Answer in 20 seconds")
-        tk.Label(timer_window, text=question.strip(), font=("Arial", 12)).pack(padx=10, pady=5)
-
-        var = tk.StringVar()
-        for label in opt_labels:
-            tk.Radiobutton(timer_window, text=f"{label}. {options_dict[label].strip()}",
-                           variable=var, value=label, font=("Arial", 10)).pack(anchor='w')
-
-        def submit_answer():
-            timer_window.after_cancel(timer_id)
-            timer_window.destroy()
-
-        def end_quiz_early():
-            nonlocal quiz_running
-            quiz_running = False
-            timer_window.destroy()
-
-        # --- Buttons ---
-        tk.Button(timer_window, text="Submit", command=submit_answer).pack(pady=5)
-        tk.Button(timer_window, text="End Quiz", command=end_quiz_early).pack(pady=5)
-
-        timer_id = timer_window.after(20000, on_timeout)  # 20 sec timer
-        timer_window.mainloop()
-
-        if not quiz_running:
-            break
-
-        answer = var.get().strip().upper()
-        if not answer:
-            chat_box.insert(tk.END, "⏳ You skipped this question or timed out.\n")
+    def configure_theme(self):
+        if self.theme == "dark":
+            self.bg_color = "#1e1e1e"
+            self.fg_color = "#ffffff"
+            self.chat_bg = "#2e2e2e"
         else:
-            attempted += 1
-            if answer == correct.strip().upper():
-                score += 1
-                chat_box.insert(tk.END, "✅ Correct!\n")
-            else:
-                chat_box.insert(tk.END, f"❌ Wrong! Correct answer was {correct.strip().upper()}\n")
+            self.bg_color = "#f0f2f5"
+            self.fg_color = "#000000"
+            self.chat_bg = "#ffffff"
+        self.root.configure(bg=self.bg_color)
 
-    chat_box.insert(tk.END, f"\n🧾 Quiz Ended\n")
-    chat_box.insert(tk.END, f"Questions attempted: {attempted}/{total}\n")
-    chat_box.insert(tk.END, f"Correct answers: {score}\n")
-    chat_box.insert(tk.END, f"Final Score: {score}/{attempted if attempted else total}\n")
+    def toggle_theme(self):
+        self.theme = "dark" if self.theme == "light" else "light"
+        self.configure_theme()
+        self.root.destroy()
+        root = tk.Tk()
+        MaritimeChatbot(root)
+        root.mainloop()
 
-    if attempted > 0:
-        save_score(user_name, score, attempted)
+    def setup_ui(self):
+        style = ttk.Style()
+        style.configure("TButton", padding=6, relief="flat", background="#0078D7", foreground="white", font=("Arial", 11, "bold"))
+        style.configure("TLabel", font=("Arial", 12), background=self.bg_color, foreground=self.fg_color)
 
+        title = ttk.Label(self.root, text="😳 Maritime Expert Assistant", font=("Helvetica", 18, "bold"), anchor="center")
+        title.pack(pady=10)
 
-# --- Submit Handler ---
-def submit(event=None):
-    query = entry.get()
-    entry.delete(0, tk.END)
-    user_input.set(query)
-    ask_question(query)
+        self.chat_display = scrolledtext.ScrolledText(
+            self.root, wrap=tk.WORD, font=('Arial', 12), bg=self.chat_bg, fg=self.fg_color, height=25
+        )
+        self.chat_display.pack(padx=15, pady=10, fill=tk.BOTH, expand=True)
 
-# --- Ask Question ---
-def ask_question(query):
-    if not query and enable_voice:
-        query = listen()
-        chat_box.insert(tk.END, f"🎤 You (voice): {query}\n")
+        input_frame = tk.Frame(self.root, bg=self.bg_color)
+        input_frame.pack(padx=15, pady=5, fill=tk.X)
 
-    if not query:
-        return
+        self.user_input = tk.Entry(input_frame, font=('Arial', 13))
+        self.user_input.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        self.user_input.bind("<Return>", self.process_input)
 
-    chat_box.insert(tk.END, f"You: {query}\n")
+        ttk.Button(input_frame, text="💬 Ask", command=lambda: self.process_input(None)).pack(side=tk.RIGHT)
 
-    if query.lower() in ["exit", "quit"]:
-        app.quit()
-        return
+        btn_frame = tk.Frame(self.root, bg=self.bg_color)
+        btn_frame.pack(pady=10)
 
-    if query.lower() == "leaderboard":
-    cursor.execute("""
-    SELECT user, avatar, SUM(score) as total_score, COUNT(*) as attempts
-    FROM scores GROUP BY user ORDER BY total_score DESC LIMIT 10
-""")
+        buttons = [
+            ("📁 Load PDF", self.load_pdf),
+            ("🧠 MCQ Quiz", self.start_mcq_quiz),
+            ("🌓 Toggle Theme", self.toggle_theme),
+            ("🏆 Leaderboard", self.show_leaderboard)
+        ]
 
-    leaderboard = cursor.fetchall()
-    chat_box.insert(tk.END, f"\n🏆 Leaderboard:\n")
-    
-    if avatar_path:
-        chat_box.insert(tk.END, f"(Your Avatar Shown Below Leaderboard)\n")
+        for text, cmd in buttons:
+            ttk.Button(btn_frame, text=text, command=cmd).pack(side=tk.LEFT, padx=6)
 
-    for row in leaderboard:
-        chat_box.insert(tk.END, f"{row[0]} - Score: {row[1]} (Attempts: {row[2]})\n")
+    def load_pdf(self):
+        file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+        if not file_path:
+            return
 
-    if avatar_path:
         try:
-            img = Image.open(avatar_path).resize((80, 80))
-            avatar_img = ImageTk.PhotoImage(img)
-            avatar_display = tk.Label(app, image=avatar_img)
-            avatar_display.image = avatar_img
-            avatar_display.pack(pady=5)
+            loader = PyPDFLoader(file_path)
+            documents = loader.load()
+
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            docs = splitter.split_documents(documents)
+
+            embeddings = OllamaEmbeddings(model="nomic-embed-text")
+            vectorstore = Chroma.from_documents(documents=docs, embedding=embeddings)
+
+            self.qa_chain = ConversationalRetrievalChain.from_llm(
+                llm=OllamaLLM(model="mistral"),
+                retriever=vectorstore.as_retriever(),
+                memory=ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+            )
+            self.display_message("PDF loaded and processed successfully!", "bot")
         except Exception as e:
-            chat_box.insert(tk.END, f"Avatar load error: {e}\n")
-    return
+            self.display_message(f"Error loading PDF: {e}", "error")
 
+    def load_sample_pdf(self):
+        pass
 
-    try:
-        response = qa.invoke({"question": query})["answer"]
-        chat_box.insert(tk.END, f"🤖: {response}\n")
-    except Exception as e:
-        chat_box.insert(tk.END, f"Error: {e}\n")
+    def generate_diagram(self, question):
+        if "engine" in question.lower():
+            fig, ax = plt.subplots()
+            ax.text(0.5, 0.5, "[Engine Diagram]", ha='center', va='center', fontsize=14)
+            ax.axis('off')
+        elif "scavenging" in question.lower():
+            fig, ax = plt.subplots()
+            ax.text(0.5, 0.5, "[Scavenging Process]", ha='center', va='center', fontsize=14)
+            ax.axis('off')
+        else:
+            return
 
-btn_theme = tk.Button(frame, text="🌓 Theme", command=toggle_theme)
-btn_theme.grid(row=1, column=2, padx=5)
+        buf = BytesIO()
+        plt.savefig(buf, format='png')
+        buf.seek(0)
+        img = Image.open(buf)
+        img = ImageTk.PhotoImage(img)
 
-btn_exit = tk.Button(frame, text="❌ Exit", command=app.quit)
-btn_exit.grid(row=1, column=3, padx=5)
+        img_label = tk.Label(self.chat_display, image=img, bg=self.chat_bg)
+        img_label.image = img
+        self.chat_display.window_create(tk.END, window=img_label)
+        self.chat_display.insert(tk.END, "\n")
 
-entry.bind("<Return>", submit)
-entry.focus()
+    def process_input(self, event):
+        question = self.user_input.get()
+        self.user_input.delete(0, tk.END)
 
-# Default theme
-dark_mode = False
-apply_theme()
+        if not question:
+            return
+        self.display_message(f"You: {question}", "user")
 
-app.mainloop()
+        if self.mcq_mode:
+            self.handle_mcq_response(question)
+            return
+
+        try:
+            if self.qa_chain:
+                result = self.qa_chain({"question": question})
+                answer = result["answer"]
+                self.display_message(f"Assistant: {answer}", "bot")
+                self.generate_diagram(question)
+            else:
+                self.display_message("Please load a PDF first", "error")
+        except Exception as e:
+            self.display_message(f"Error: {str(e)}", "error")
+
+    def _load_mcq_database(self):
+        return [
+            {
+                "question": "What is the function of a ship's ballast system?",
+                "options": ["To steer the ship", "To control buoyancy", "To generate power", "To anchor the ship"],
+                "answer": "To control buoyancy"
+            },
+            {
+                "question": "Which part of the engine is responsible for air intake?",
+                "options": ["Piston", "Cylinder", "Turbocharger", "Crankshaft"],
+                "answer": "Turbocharger"
+            },
+            {
+                "question": "What is scavenging in marine engines?",
+                "options": [
+                    "Collecting food from the sea",
+                    "Removing exhaust gases and bringing in fresh air",
+                    "Cleaning the ship",
+                    "Repairing engine parts"
+                ],
+                "answer": "Removing exhaust gases and bringing in fresh air"
+            }
+        ]
+
+    def start_mcq_quiz(self):
+        self.mcq_mode = True
+        self.current_question_index = 0
+        self.user_score = 0
+        self.display_message("Starting MCQ Quiz (3 questions):", "bot")
+        self.ask_next_question()
+
+    def ask_next_question(self):
+        if self.current_question_index < 3:
+            q = self.mcq_bank[self.current_question_index % len(self.mcq_bank)]
+            options = "\n".join([f"{i+1}. {opt}" for i, opt in enumerate(q["options"])])
+            self.display_message(f"Q{self.current_question_index+1}: {q['question']}\n{options}", "bot")
+        else:
+            self.display_message(f"Quiz completed! Your score: {self.user_score}/3", "bot")
+            name = simpledialog.askstring("Username", "Enter your name for the leaderboard:") or "User"
+            self.store_score(name, self.user_score)
+            self.mcq_mode = False
+
+    def handle_mcq_response(self, response):
+        q = self.mcq_bank[self.current_question_index % len(self.mcq_bank)]
+        try:
+            selected = int(response.strip()) - 1
+            if 0 <= selected < len(q["options"]):
+                if q["options"][selected].lower() == q["answer"].lower():
+                    self.display_message("Correct!", "bot")
+                    self.user_score += 1
+                else:
+                    self.display_message(f"Wrong! Correct answer was: {q['answer']}", "bot")
+                self.current_question_index += 1
+                self.ask_next_question()
+            else:
+                self.display_message("Invalid option. Please select a number between 1 and 4.", "bot")
+        except ValueError:
+            self.display_message("Please enter a number (1-4).", "bot")
+
+    def setup_database(self):
+        self.conn = sqlite3.connect("leaderboard.db")
+        self.cursor = self.conn.cursor()
+        self.cursor.execute('''CREATE TABLE IF NOT EXISTS leaderboard (name TEXT, score INTEGER)''')
+        self.conn.commit()
+
+    def store_score(self, name, score):
+        self.cursor.execute("INSERT INTO leaderboard (name, score) VALUES (?, ?)", (name, score))
+        self.conn.commit()
+
+    def show_leaderboard(self):
+        leaderboard_win = tk.Toplevel(self.root)
+        leaderboard_win.title("Leaderboard")
+        leaderboard_win.geometry("300x300")
+
+        self.cursor.execute("SELECT name, score FROM leaderboard ORDER BY score DESC LIMIT 10")
+        entries = self.cursor.fetchall()
+
+        tk.Label(leaderboard_win, text="Top Scores", font=("Helvetica", 14, "bold")).pack(pady=10)
+        for i, (name, score) in enumerate(entries):
+            tk.Label(leaderboard_win, text=f"{i+1}. {name} - {score}").pack()
+
+    def display_message(self, msg, sender):
+        tag = "user" if sender == "user" else "bot"
+        self.chat_display.insert(tk.END, f"{msg}\n", tag)
+        self.chat_display.see(tk.END)
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    MaritimeChatbot(root)
+    root.mainloop()

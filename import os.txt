@@ -1,0 +1,564 @@
+import os
+import random
+import sqlite3
+import tkinter as tk
+from tkinter import ttk, scrolledtext, messagebox, filedialog, simpledialog, Toplevel
+from PIL import Image, ImageTk
+from langchain_community.document_loaders import PyPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
+from langchain_community.embeddings import OllamaEmbeddings
+from langchain_community.llms import Ollama
+import matplotlib.pyplot as plt
+from io import BytesIO
+import base64
+
+
+class MaritimeChatbot:
+    def __init__(self, root):
+        self.root = root
+        self.root.title("⚓ Maritime Expert Assistant")
+        self.root.geometry("1100x800")
+        self.root.configure(bg="#e6f2ff")  # Light blue background
+        self.style = ttk.Style()
+        
+        # Configure theme
+        self.theme = "light"
+        self.configure_theme()
+        
+        self.qa_chain = None
+        self.current_pdf = None
+        self.mcq_bank = self._load_mcq_database()
+        self.mcq_mode = False
+        self.current_question_index = 0
+        self.user_score = 0
+        self.vectorstore = None
+        self.conn = None  # Initialize database connection attribute
+
+        self.setup_ui()
+        self.setup_database()
+        self.load_sample_pdf()
+
+    def configure_theme(self):
+        if self.theme == "dark":
+            # Nautical dark theme - deep ocean colors
+            self.bg_color = "#0a1a2a"  # Very dark navy
+            self.fg_color = "#e0f7ff"   # Light cyan
+            self.chat_bg = "#1a2a3a"   # Dark slate blue
+            self.button_bg = "#3a6ea5"  # Ocean blue
+            self.button_active = "#4a7eb5"  # Lighter ocean blue
+            self.secondary_button = "#2d7d7d"  # Teal
+            self.secondary_active = "#3d8d8d"  # Lighter teal
+            self.highlight = "#ffcc00"  # Golden yellow
+            self.accent_color = "#c44d58"  # Coral red
+        else:
+            # Nautical light theme - beach and sky colors
+            self.bg_color = "#e6f2ff"   # Very light sky blue
+            self.fg_color = "#003366"    # Dark navy
+            self.chat_bg = "#ffffff"    # White
+            self.button_bg = "#3a6ea5"  # Ocean blue
+            self.button_active = "#4a7eb5"  # Lighter ocean blue
+            self.secondary_button = "#2d7d7d"  # Teal
+            self.secondary_active = "#3d8d8d"  # Lighter teal
+            self.highlight = "#ffcc00"  # Golden yellow
+            self.accent_color = "#c44d58"  # Coral red
+        
+        self.style.configure("TFrame", background=self.bg_color)
+        self.style.configure("TLabel", background=self.bg_color, foreground=self.fg_color, font=("Helvetica", 12))
+        self.style.configure("TEntry", fieldbackground="white", foreground="black")
+        
+        # Configure primary buttons (ocean blue)
+        self.style.configure("Primary.TButton", 
+                            background=self.button_bg, 
+                            foreground="white", 
+                            font=("Helvetica", 10, "bold"), 
+                            padding=8,
+                            borderwidth=0,
+                            focusthickness=3,
+                            focuscolor=self.highlight)
+        self.style.map("Primary.TButton",
+                      background=[("active", self.button_active), ("pressed", self.button_active)],
+                      foreground=[("active", "white"), ("pressed", "white")])
+        
+        # Configure secondary buttons (teal)
+        self.style.configure("Secondary.TButton", 
+                            background=self.secondary_button, 
+                            foreground="white", 
+                            font=("Helvetica", 10, "bold"), 
+                            padding=8,
+                            borderwidth=0,
+                            focusthickness=3,
+                            focuscolor=self.highlight)
+        self.style.map("Secondary.TButton",
+                      background=[("active", self.secondary_active), ("pressed", self.secondary_active)],
+                      foreground=[("active", "white"), ("pressed", "white")])
+        
+        # Configure accent buttons (golden yellow)
+        self.style.configure("Accent.TButton", 
+                            background=self.highlight, 
+                            foreground="#333333", 
+                            font=("Helvetica", 10, "bold"), 
+                            padding=8,
+                            borderwidth=0,
+                            focusthickness=3,
+                            focuscolor=self.button_bg)
+        self.style.map("Accent.TButton",
+                      background=[("active", "#ffd700"), ("pressed", "#ffd700")],
+                      foreground=[("active", "#333333"), ("pressed", "#333333")])
+        
+        # Configure danger buttons (coral red)
+        self.style.configure("Danger.TButton", 
+                            background=self.accent_color, 
+                            foreground="white", 
+                            font=("Helvetica", 10, "bold"), 
+                            padding=8,
+                            borderwidth=0,
+                            focusthickness=3,
+                            focuscolor=self.highlight)
+        self.style.map("Danger.TButton",
+                      background=[("active", "#d45d68"), ("pressed", "#d45d68")],
+                      foreground=[("active", "white"), ("pressed", "white")])
+        
+        self.root.configure(bg=self.bg_color)
+
+    def toggle_theme(self):
+        self.theme = "dark" if self.theme == "light" else "light"
+        self.configure_theme()
+        # Update existing widgets
+        for widget in self.root.winfo_children():
+            if isinstance(widget, tk.Text) or isinstance(widget, scrolledtext.ScrolledText):
+                widget.configure(bg=self.chat_bg, fg=self.fg_color)
+            elif isinstance(widget, tk.Frame):
+                widget.configure(bg=self.bg_color)
+            elif isinstance(widget, tk.Entry):
+                widget.configure(bg="white", fg="black")
+
+    def setup_ui(self):
+        # Header Frame with nautical theme
+        header_frame = ttk.Frame(self.root, style="TFrame")
+        header_frame.pack(fill=tk.X, padx=10, pady=(10, 5))
+        
+        # Title with nautical symbols
+        title = ttk.Label(header_frame, 
+                         text="⚓ Maritime Expert Assistant 🌊", 
+                         font=("Helvetica", 20, "bold"),
+                         style="TLabel")
+        title.pack(side=tk.LEFT)
+        
+        # Theme toggle button (accent color)
+        theme_btn = ttk.Button(header_frame, text="🌓", command=self.toggle_theme, 
+                             width=3, style="Accent.TButton")
+        theme_btn.pack(side=tk.RIGHT, padx=5)
+        
+        # Main chat area with rounded corners
+        chat_frame = ttk.Frame(self.root, style="TFrame")
+        chat_frame.pack(fill=tk.BOTH, expand=True, padx=10, pady=5)
+        
+        # Custom chat display with scrollbar
+        self.chat_display = scrolledtext.ScrolledText(chat_frame, wrap=tk.WORD, font=('Helvetica', 12),
+                                   bg=self.chat_bg, fg=self.fg_color, padx=15, pady=15,
+                                   relief=tk.GROOVE, highlightthickness=2,
+                                   highlightbackground=self.button_bg, 
+                                   highlightcolor=self.button_bg)
+        self.chat_display.pack(fill=tk.BOTH, expand=True)
+        
+        # Configure tags for different message types
+        self.chat_display.tag_config("user", foreground="#1a3d8f", font=("Helvetica", 12, "bold"))
+        self.chat_display.tag_config("bot", foreground="#006622", font=("Helvetica", 12))
+        self.chat_display.tag_config("error", foreground=self.accent_color)
+        self.chat_display.tag_config("system", foreground="#666666", font=("Helvetica", 11, "italic"))
+        
+        # Input area
+        input_frame = ttk.Frame(self.root, style="TFrame")
+        input_frame.pack(fill=tk.X, padx=10, pady=(5, 10))
+        
+        # Stylish entry widget with nautical theme
+        self.user_input = ttk.Entry(input_frame, font=('Helvetica', 13), 
+                                  style="TEntry", width=50)
+        self.user_input.pack(side=tk.LEFT, fill=tk.X, expand=True, padx=(0, 10))
+        self.user_input.bind("<Return>", self.process_input)
+        
+        # Send button with ship wheel icon (primary color)
+        send_btn = ttk.Button(input_frame, text="⛵ Send", 
+                             command=lambda: self.process_input(None),
+                             style="Primary.TButton")
+        send_btn.pack(side=tk.RIGHT)
+        
+        # Button panel with nautical styling
+        button_frame = ttk.Frame(self.root, style="TFrame")
+        button_frame.pack(fill=tk.X, padx=10, pady=(0, 10))
+        
+        # Action buttons with different colors
+        buttons = [
+            ("📚 Load PDF", self.load_pdf, "Primary.TButton"),
+            ("🧠 Start Quiz", self.start_mcq_quiz, "Secondary.TButton"),
+            ("🏆 Leaderboard", self.show_leaderboard, "Accent.TButton"),
+            ("ℹ️ Help", self.show_help, "Danger.TButton"),
+            ("🧹 Clear Chat", self.clear_chat, "Secondary.TButton")
+        ]
+        
+        for text, cmd, style_name in buttons:
+            btn = ttk.Button(button_frame, text=text, command=cmd, style=style_name)
+            btn.pack(side=tk.LEFT, padx=5, ipadx=5)
+        
+        # Status bar with nautical style
+        self.status_bar = ttk.Label(self.root, text="Ready", 
+                                  style="TLabel", relief=tk.SUNKEN, anchor=tk.W,
+                                  background=self.secondary_button, foreground="white",
+                                  font=("Helvetica", 10))
+        self.status_bar.pack(fill=tk.X, padx=10, pady=(0, 5))
+
+    def clear_chat(self):
+        self.chat_display.delete(1.0, tk.END)
+        if self.qa_chain and hasattr(self.qa_chain, 'memory'):
+            self.qa_chain.memory.clear()
+        self.display_message("Chat history cleared.", "system")
+
+    def show_help(self):
+        help_text = """Maritime Expert Assistant Help:
+
+1. Load a PDF document to ask questions about its content
+2. Use the MCQ Quiz to test your maritime knowledge
+3. Check the leaderboard to see top scores
+4. Toggle between light/dark mode using the theme button
+5. Clear the chat history with the Clear Chat button
+
+Type your questions in the input field and press Enter or click Send."""
+        self.display_message(f"Help:\n{help_text}", "bot")
+
+    def load_pdf(self):
+        file_path = filedialog.askopenfilename(filetypes=[("PDF files", "*.pdf")])
+        if not file_path:
+            return
+
+        try:
+            self.status_bar.config(text="Processing PDF...")
+            self.root.update()
+            
+            loader = PyPDFLoader(file_path)
+            documents = loader.load()
+
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
+            docs = splitter.split_documents(documents)
+
+            embeddings = OllamaEmbeddings(model="nomic-embed-text")
+            if self.vectorstore:
+                # Clear existing vectorstore if it exists
+                self.vectorstore.delete_collection()
+            
+            self.vectorstore = Chroma.from_documents(documents=docs, embedding=embeddings)
+
+            self.qa_chain = ConversationalRetrievalChain.from_llm(
+                llm=Ollama(model="mistral"),
+                retriever=self.vectorstore.as_retriever(),
+                memory=ConversationBufferMemory(memory_key="chat_history", return_messages=True)
+            )
+            self.current_pdf = os.path.basename(file_path)
+            self.display_message(f"PDF '{self.current_pdf}' loaded and processed successfully!", "bot")
+            self.status_bar.config(text=f"Loaded: {self.current_pdf}")
+        except Exception as e:
+            self.display_message(f"Error loading PDF: {str(e)}", "error")
+            self.status_bar.config(text="Error loading PDF")
+        finally:
+            self.root.update()
+
+    def load_sample_pdf(self):
+        self.display_message("Welcome to Maritime Expert Assistant! Please load a PDF to begin.", "system")
+
+    def generate_diagram(self, question):
+        try:
+            fig = plt.figure(figsize=(8, 4), facecolor=self.bg_color)
+            ax = fig.add_subplot(111)
+            
+            if "engine" in question.lower():
+                ax.set_title("Marine Engine Diagram", color=self.fg_color, pad=20)
+                ax.text(0.5, 0.5, "🛠️ Engine Schematic\n⚙️ Pistons\n🔥 Combustion Chamber\n🌀 Turbocharger", 
+                       ha='center', va='center', fontsize=12, color=self.fg_color)
+            elif "scavenging" in question.lower():
+                ax.set_title("Scavenging Process", color=self.fg_color, pad=20)
+                ax.text(0.5, 0.5, "🔄 Scavenging Process\n💨 Air Flow\n🔥 Exhaust Gases\n⚡ Efficiency Boost", 
+                       ha='center', va='center', fontsize=12, color=self.fg_color)
+            elif "ship structure" in question.lower():
+                ax.set_title("Ship Structure", color=self.fg_color, pad=20)
+                ax.text(0.5, 0.5, "🚢 Hull\n⚓ Keel\n🏗️ Bulkheads\n🛥️ Superstructure", 
+                       ha='center', va='center', fontsize=12, color=self.fg_color)
+            else:
+                plt.close(fig)
+                return
+
+            ax.axis('off')
+            fig.tight_layout()
+            
+            buf = BytesIO()
+            plt.savefig(buf, format='png', dpi=100, bbox_inches='tight', facecolor=fig.get_facecolor())
+            plt.close(fig)
+            buf.seek(0)
+            
+            img = Image.open(buf)
+            img = img.resize((600, 300), Image.LANCZOS)
+            img = ImageTk.PhotoImage(img)
+
+            # Create a frame for the image with border
+            img_frame = tk.Frame(self.chat_display, bg=self.highlight, padx=1, pady=1)
+            img_label = tk.Label(img_frame, image=img, bg="white")
+            img_label.image = img
+            img_label.pack(padx=1, pady=1)
+            
+            self.chat_display.window_create(tk.END, window=img_frame)
+            self.chat_display.insert(tk.END, "\n\n")
+            self.chat_display.see(tk.END)
+            
+        except Exception as e:
+            self.display_message(f"Could not generate diagram: {str(e)}", "error")
+
+    def process_input(self, event):
+        question = self.user_input.get().strip()
+        self.user_input.delete(0, tk.END)
+
+        if not question:
+            return
+            
+        self.display_message(f"You: {question}", "user")
+
+        if self.mcq_mode:
+            self.handle_mcq_response(question)
+            return
+
+        try:
+            if self.qa_chain:
+                self.status_bar.config(text="Thinking...")
+                self.root.update()
+                
+                result = self.qa_chain({"question": question})
+                answer = result["answer"]
+                self.display_message(f"Assistant: {answer}", "bot")
+                
+                # Generate diagram if relevant
+                if any(keyword in question.lower() for keyword in ["engine", "scavenging", "ship structure", "diagram"]):
+                    self.generate_diagram(question)
+                
+                self.status_bar.config(text="Ready")
+            else:
+                self.display_message("Please load a PDF document first using the 'Load PDF' button", "error")
+        except Exception as e:
+            self.display_message(f"Error processing your question: {str(e)}", "error")
+            self.status_bar.config(text="Error occurred")
+        finally:
+            self.root.update()
+
+    def _load_mcq_database(self):
+        return [
+            {
+                "question": "What is the primary function of a ship's ballast system?",
+                "options": ["To steer the ship", "To control buoyancy and stability", 
+                           "To generate electrical power", "To anchor the ship in deep water"],
+                "answer": "To control buoyancy and stability",
+                "explanation": "Ballast systems help maintain ship stability by adjusting weight distribution."
+            },
+            {
+                "question": "Which component is responsible for air intake in marine diesel engines?",
+                "options": ["Piston", "Cylinder liner", "Turbocharger", "Crankshaft"],
+                "answer": "Turbocharger",
+                "explanation": "The turbocharger compresses air entering the engine for better combustion."
+            },
+            {
+                "question": "What does 'scavenging' refer to in marine engines?",
+                "options": [
+                    "Cleaning the engine exterior",
+                    "Removing exhaust gases and introducing fresh air",
+                    "Fuel filtration process",
+                    "Emergency shutdown procedure"
+                ],
+                "answer": "Removing exhaust gases and introducing fresh air",
+                "explanation": "Scavenging is crucial for efficient engine operation by clearing exhaust gases."
+            },
+            {
+                "question": "What is the purpose of a bulbous bow on a ship?",
+                "options": [
+                    "To increase cargo capacity",
+                    "To reduce wave resistance and improve fuel efficiency",
+                    "To serve as a collision buffer",
+                    "To house additional crew quarters"
+                ],
+                "answer": "To reduce wave resistance and improve fuel efficiency",
+                "explanation": "The bulbous bow modifies the wave pattern along the hull, reducing drag."
+            },
+            {
+                "question": "Which instrument measures a ship's speed through water?",
+                "options": [
+                    "Anemometer",
+                    "Pitot tube",
+                    "Doppler log",
+                    "Barometer"
+                ],
+                "answer": "Doppler log",
+                "explanation": "The Doppler log uses the Doppler effect to measure speed relative to the water."
+            }
+        ]
+
+    def start_mcq_quiz(self):
+        self.mcq_mode = True
+        self.current_question_index = 0
+        self.user_score = 0
+        self.display_message("Starting Maritime Knowledge Quiz (5 questions):\nType the number of your answer (1-4)", "bot")
+        self.ask_next_question()
+
+    def ask_next_question(self):
+        if self.current_question_index < len(self.mcq_bank):
+            q = self.mcq_bank[self.current_question_index]
+            options = "\n".join([f"  {i+1}. {opt}" for i, opt in enumerate(q["options"])])
+            self.display_message(f"\nQuestion {self.current_question_index+1}:\n{q['question']}\n\n{options}\n", "bot")
+        else:
+            performance = ""
+            if self.user_score == len(self.mcq_bank):
+                performance = "⛵ Excellent! You're a maritime expert! ⛵"
+            elif self.user_score >= len(self.mcq_bank) * 0.7:
+                performance = "👍 Good job! You know your ships!"
+            else:
+                performance = "📚 Keep studying! The sea has more to teach you."
+                
+            self.display_message(f"\nQuiz completed! Your score: {self.user_score}/{len(self.mcq_bank)}\n{performance}\n", "bot")
+            name = simpledialog.askstring("Quiz Results", 
+                                        f"Your score: {self.user_score}/{len(self.mcq_bank)}\nEnter your name for the leaderboard:",
+                                        parent=self.root) or "Anonymous"
+            self.store_score(name, self.user_score)
+            self.mcq_mode = False
+
+    def handle_mcq_response(self, response):
+        q = self.mcq_bank[self.current_question_index]
+        try:
+            selected = int(response.strip()) - 1
+            if 0 <= selected < len(q["options"]):
+                if q["options"][selected].lower() == q["answer"].lower():
+                    self.display_message("✅ Correct!", "bot")
+                    self.user_score += 1
+                else:
+                    self.display_message(f"❌ Incorrect. The correct answer was: {q['answer']}\n💡 {q.get('explanation', '')}", "bot")
+                self.current_question_index += 1
+                self.ask_next_question()
+            else:
+                self.display_message(f"Please enter a number between 1 and {len(q['options'])}.", "bot")
+        except ValueError:
+            self.display_message(f"Please enter the number (1-{len(q['options'])}) of your chosen answer.", "bot")
+
+    def setup_database(self):
+        try:
+            self.conn = sqlite3.connect("maritime_leaderboard.db")
+            self.cursor = self.conn.cursor()
+            self.cursor.execute('''CREATE TABLE IF NOT EXISTS leaderboard 
+                                 (id INTEGER PRIMARY KEY AUTOINCREMENT,
+                                  name TEXT, 
+                                  score INTEGER,
+                                  timestamp DATETIME DEFAULT CURRENT_TIMESTAMP)''')
+            self.conn.commit()
+        except sqlite3.Error as e:
+            self.display_message(f"Database error: {str(e)}", "error")
+
+    def store_score(self, name, score):
+        try:
+            self.cursor.execute("INSERT INTO leaderboard (name, score) VALUES (?, ?)", (name, score))
+            self.conn.commit()
+        except sqlite3.Error as e:
+            self.display_message(f"Could not save score: {str(e)}", "error")
+
+    def show_leaderboard(self):
+        try:
+            leaderboard_win = Toplevel(self.root)
+            leaderboard_win.title("Maritime Knowledge Leaderboard")
+            leaderboard_win.geometry("500x500")
+            leaderboard_win.configure(bg=self.bg_color)
+            
+            # Stylish header
+            header = ttk.Frame(leaderboard_win, style="TFrame")
+            header.pack(fill=tk.X, padx=10, pady=10)
+            ttk.Label(header, text="🏆 Top Mariners 🏆", 
+                     font=("Helvetica", 16, "bold"), 
+                     style="TLabel").pack()
+            
+            # Leaderboard content
+            content = ttk.Frame(leaderboard_win, style="TFrame")
+            content.pack(fill=tk.BOTH, expand=True, padx=20, pady=(0, 20))
+            
+            # Get top 10 scores
+            self.cursor.execute("SELECT name, score, timestamp FROM leaderboard ORDER BY score DESC, timestamp ASC LIMIT 10")
+            entries = self.cursor.fetchall()
+            
+            if not entries:
+                ttk.Label(content, text="No scores yet!\nBe the first to take the quiz!", 
+                         style="TLabel").pack(pady=50)
+                return
+            
+            # Create a styled treeview
+            style = ttk.Style()
+            style.configure("Leaderboard.Treeview", 
+                           background=self.chat_bg, 
+                           foreground=self.fg_color,
+                           rowheight=30,
+                           fieldbackground=self.chat_bg)
+            style.configure("Leaderboard.Treeview.Heading", 
+                           font=("Helvetica", 12, "bold"),
+                           background=self.button_bg,
+                           foreground="white")
+            style.map("Leaderboard.Treeview", 
+                     background=[("selected", self.highlight)])
+            
+            tree = ttk.Treeview(content, columns=("rank", "name", "score", "date"), 
+                               show="headings", style="Leaderboard.Treeview",
+                               selectmode="none")
+            
+            # Configure columns
+            tree.heading("rank", text="Rank")
+            tree.heading("name", text="Mariner")
+            tree.heading("score", text="Score")
+            tree.heading("date", text="Date")
+            
+            tree.column("rank", width=60, anchor=tk.CENTER)
+            tree.column("name", width=180, anchor=tk.W)
+            tree.column("score", width=80, anchor=tk.CENTER)
+            tree.column("date", width=120, anchor=tk.CENTER)
+            
+            # Add data
+            for i, (name, score, timestamp) in enumerate(entries):
+                medal = ""
+                if i == 0: medal = "🥇"
+                elif i == 1: medal = "🥈"
+                elif i == 2: medal = "🥉"
+                
+                # Format date (just the date part, not time)
+                date_str = timestamp.split()[0] if isinstance(timestamp, str) else timestamp.strftime("%Y-%m-%d")
+                tree.insert("", tk.END, values=(f"{i+1}{medal}", name, score, date_str))
+            
+            tree.pack(fill=tk.BOTH, expand=True)
+            
+            # Close button (using secondary color)
+            btn_frame = ttk.Frame(leaderboard_win, style="TFrame")
+            btn_frame.pack(fill=tk.X, padx=20, pady=(0, 10))
+            ttk.Button(btn_frame, text="Close", command=leaderboard_win.destroy,
+                      style="Secondary.TButton").pack()
+            
+        except Exception as e:
+            self.display_message(f"Could not display leaderboard: {str(e)}", "error")
+
+    def display_message(self, msg, sender):
+        tag = sender
+        self.chat_display.insert(tk.END, f"{msg}\n", tag)
+        self.chat_display.see(tk.END)
+
+    def __del__(self):
+        try:
+            if hasattr(self, 'vectorstore') and self.vectorstore:
+                self.vectorstore.delete_collection()
+            if hasattr(self, 'conn') and self.conn:
+                self.conn.close()
+        except Exception as e:
+            print(f"Cleanup error: {str(e)}")
+
+if __name__ == "__main__":
+    root = tk.Tk()
+    app = MaritimeChatbot(root)
+    try:
+        root.mainloop()
+    except KeyboardInterrupt:
+        root.destroy()

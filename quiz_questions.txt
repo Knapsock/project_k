@@ -1,104 +1,239 @@
-[mcq_easy] What is the full form of BOD?
-A. Biological Oxygen Demand
-B. Biochemical Oxide Detection
-C. Basic Organic Density
-D. Boiler Output Design
-Answer: A
-
-[mcq_easy] What causes water hammer in pipes?
-A. Excessive pressure
-B. Sudden valve closure
-C. High temperature
-D. Low flow velocity
+\[mcq\_easy] What is the purpose of boiler water treatment?
+A. To cool the water
+B. To remove impurities and prevent scaling and corrosion
+C. To heat the water faster
+D. To make water drinkable
 Answer: B
+Reason: Boiler water treatment prevents scale buildup and corrosion which can damage the system and reduce efficiency.
 
-[mcq_easy] What is the main function of a turbocharger?
-A. Reduce noise
-B. Improve fuel economy
-C. Increase air intake pressure
-D. Cool engine oil
+\[mcq\_easy] Name any two types of valves used in marine systems.
+A. Needle and ball valves
+B. Globe valve and gate valve
+C. Float valve and plug valve
+D. Pressure valve and stop valve
+Answer: B
+Reason: Globe and gate valves are commonly used in marine systems for flow control and isolation.
+
+\[mcq\_easy] What are the effects of using hard water in boilers?
+A. Reduces fuel efficiency
+B. Forms sludge in tanks
+C. Causes scale formation and reduces boiler efficiency
+D. Improves water quality
 Answer: C
+Reason: Hard water contains minerals that form scale inside boilers, reducing heat transfer and efficiency.
 
-[mcq_easy] What is typically used to measure temperature?
-A. Barometer
-B. Thermometer
-C. Anemometer
+\[mcq\_easy] List any two materials used in making cutting tools.
+A. Plastic and copper
+B. Wood and brass
+C. High speed steel and tungsten carbide
+D. Lead and zinc
+Answer: C
+Reason: High speed steel and tungsten carbide are durable materials used for high-performance cutting tools.
+
+\[mcq\_easy] What does a PH test indicate in boiler water treatment?
+A. Pressure of water
+B. Temperature of water
+C. Acidity or alkalinity of water
+D. Salinity of water
+Answer: C
+Reason: pH testing helps maintain the correct chemical balance in boiler water to prevent corrosion and scaling.
+
+\[mcq\_easy] What is the shape of Earth?
+A. Cube
+B. Flat disc
+C. Sphere
+D. Triangle
+Answer: C
+Reason: Earth is an oblate spheroid, commonly referred to as a sphere.
+
+\[mcq\_easy] Which of these is a renewable energy source?
+A. Coal
+B. Oil
+C. Solar
+D. Natural gas
+Answer: C
+Reason: Solar energy is renewable and naturally replenished, unlike fossil fuels.
+
+\[mcq\_easy] What device is used to measure temperature?
+A. Thermometer
+B. Barometer
+C. Altimeter
 D. Voltmeter
-Answer: B
-
-[mcq_easy] Which part stores fuel in a ship engine system?
-A. Governor
-B. Crankshaft
-C. Fuel tank
-D. Air filter
-Answer: C
-
-[mcq_easy] What color indicates overheating in exhaust?
-A. Blue
-B. White
-C. Yellow
-D. Red
-Answer: D
-
-[mcq_easy] What is used to clean fuel?
-A. Separator
-B. Filter
-C. Blower
-D. Condenser
 Answer: A
+Reason: A thermometer is specifically designed to measure temperature.
 
-[mcq_easy] What parameter is adjusted in fuel injection timing?
-A. Oil pressure
-B. Ignition delay
-C. Injector angle
-D. Fuel temperature
+\[mcq\_easy] Which gas do plants absorb from the atmosphere?
+A. Oxygen
+B. Carbon dioxide
+C. Nitrogen
+D. Hydrogen
 Answer: B
+Reason: Plants absorb carbon dioxide during photosynthesis to produce energy.
 
-[mcq_easy] How often should engine oil be changed?
-A. Every 2 hours
-B. Every trip
-C. As per maintenance schedule
-D. When it smells burnt
+\[mcq\_easy] How many legs does a spider have?
+A. Six
+B. Four
+C. Eight
+D. Ten
 Answer: C
+Reason: Spiders are arachnids and have eight legs.
 
-[mcq_easy] What is a symptom of worn piston rings?
-A. Increased fuel economy
-B. White smoke
-C. Blue smoke
-D. Loud knocking
+\[mcq\_medium] Describe two disadvantages of soft water in boiler systems.
+A. Causes explosion
+B. Corrosive and lacks minerals to buffer acidity
+C. Blocks pipes
+D. Increases hardness
+Answer: B
+Reason: Soft water can become corrosive and may not provide essential buffering agents.
+
+\[mcq\_medium] What is the purpose of an operating system?
+A. To draw graphics
+B. To cool the processor
+C. To manage hardware and software
+D. To increase battery life
 Answer: C
+Reason: Operating systems manage all hardware and software resources on a computer.
 
-[mcq_easy] What does a governor control?
-A. Fuel quantity
-B. Air temperature
-C. Exhaust pressure
-D. Engine noise
+\[mcq\_medium] Explain the effect of a clogged oil filter in crankcase systems.
+A. Better lubrication
+B. Restricts oil flow and leads to overheating
+C. Makes engine cooler
+D. Increases fuel efficiency
+Answer: B
+Reason: A clogged oil filter limits oil flow, causing increased friction and overheating.
+
+\[mcq\_medium] How is vertical shaft height measured in a centrifuge?
+A. With a thermometer
+B. With a laser pointer
+C. With a depth gauge or vernier caliper
+D. With a speed sensor
+Answer: C
+Reason: These tools accurately measure the height between the casing and the shaft.
+
+\[mcq\_medium] What is the function of a pre-heater in a jacket water cooling system?
+A. To lower water temperature
+B. To reduce pump pressure
+C. To raise water temperature before engine start
+D. To flush the cooling circuit
+Answer: C
+Reason: Pre-heating reduces thermal shock and helps the engine start smoothly.
+
+\[mcq\_medium] What does Ohm’s Law relate?
+A. Voltage, resistance, and current
+B. Power, resistance, and mass
+C. Energy, current, and time
+D. Resistance, weight, and length
 Answer: A
+Reason: Ohm's Law defines the relationship between voltage, current, and resistance.
 
-[mcq_easy] Which of the following is NOT part of a four-stroke cycle?
-A. Intake
-B. Combustion
-C. Exhaust
-D. Compression
-Answer: B
-
-[mcq_easy] What tool is used to check fuel pressure?
-A. Thermocouple
-B. Multimeter
-C. Pressure gauge
-D. Flow meter
+\[mcq\_medium] What is a diode used for in electronics?
+A. Amplifying signal
+B. Storing energy
+C. Allowing current in one direction
+D. Changing voltage levels
 Answer: C
+Reason: Diodes allow current to flow in one direction and block it in the opposite direction.
 
-[mcq_easy] What does the crankshaft connect to?
-A. Cylinder head
-B. Connecting rod
-C. Fuel injector
-D. Oil cooler
-Answer: B
+\[mcq\_medium] What is the main function of a heat exchanger?
+A. Mixing chemicals
+B. Separating solids
+C. Transferring heat between fluids
+D. Reducing pressure
+Answer: C
+Reason: Heat exchangers transfer heat between fluids without mixing them.
 
-[mcq_easy] What is the ideal pH of cooling water?
-A. 3
-B. 5
-C. 7
-D. 9
+\[mcq\_medium] What is cavitation in pumps?
+A. Vibration in shaft
+B. Corrosion on blades
+C. Formation of vapor bubbles due to pressure drop
+D. Electrical fault
+Answer: C
+Reason: Cavitation occurs when vapor bubbles collapse and damage pump components.
+
+\[mcq\_medium] What does the RAM in a computer do?
+A. Stores permanent data
+B. Runs the operating system
+C. Handles temporary memory for active tasks
+D. Controls the display
+Answer: C
+Reason: RAM stores temporary data that a computer uses for quick access during operations.
+
+\[mcq\_hard] Describe the procedure of a boiler accumulation pressure test.
+A. Isolate safety valves and fire boiler at max rate to check pressure rise
+B. Add more fuel gradually
+C. Increase water circulation
+D. Monitor temperature only
+Answer: A
+Reason: This test ensures safety valves can relieve pressure effectively.
+
+\[mcq\_hard] Which of the following is NOT a common boiler water test?
+A. pH test
+B. Conductivity
+C. Chloride
+D. Density check
 Answer: D
+Reason: Density is not typically tested in boiler water; others help monitor water quality.
+
+\[mcq\_hard] What causes waste heat boiler leakage and its repair?
+A. Oil overflow; cleaned by flushing
+B. Tube crack due to thermal stress; repair by plugging or tube replacement
+C. Filter clog; clear the filters
+D. Vibration damage; coat with paint
+Answer: B
+Reason: High thermal stress can crack tubes, requiring repair or replacement.
+
+\[mcq\_hard] What does maintenance of lifeboat winch and engine systems include?
+A. Visual check only
+B. Removing and replacing hull
+C. Lubrication, brake testing, drills, and winch load test
+D. Painting exterior
+Answer: C
+Reason: Proper maintenance includes mechanical testing and operational drills.
+
+\[mcq\_hard] What happens in oil carry-over due to high throughput and solids?
+A. Oil becomes pure
+B. Water separates better
+C. Oil escapes with sludge causing contamination
+D. Nothing changes
+Answer: C
+Reason: Excess solids reduce separation efficiency, contaminating oil.
+
+\[mcq\_hard] What is the role of a superheater in a boiler?
+A. Cool down steam
+B. Recycle water
+C. Increase steam temperature above saturation
+D. Decrease boiler pressure
+Answer: C
+Reason: Superheaters increase the thermal energy of steam for better efficiency.
+
+\[mcq\_hard] What does a governor do in a diesel engine?
+A. Changes fuel type
+B. Regulates engine speed by adjusting fuel supply
+C. Increases pressure
+D. Removes heat
+Answer: B
+Reason: The governor controls the fuel flow to maintain engine speed.
+
+\[mcq\_hard] What is the function of an intercooler in a turbocharged engine?
+A. Heat the intake air
+B. Cool compressed air to increase density
+C. Burn more fuel
+D. Increase engine speed
+Answer: B
+Reason: Cooling the compressed air increases oxygen density for better combustion.
+
+\[mcq\_hard] Which phenomenon causes crankcase explosion?
+A. Water hammer
+B. High pressure in the cylinder
+C. Oil mist ignition due to hot spots
+D. Air intake blockage
+Answer: C
+Reason: Oil mist can ignite on hot surfaces, leading to explosions.
+
+\[mcq\_hard] What is meant by critical speed in shaft design?
+A. Speed at which vibration is minimum
+B. Speed at which noise stops
+C. Speed at which natural frequency matches system frequency, causing resonance
+D. Speed of the fluid in the shaft
+Answer: C
+Reason: At critical speed, resonance occurs, which can damage rotating machinery.
