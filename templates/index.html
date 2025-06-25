@@ -1,0 +1,72 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>PDF Q&A Chatbot</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      background-color: #121212;
+      color: #f1f1f1;
+      margin: 0;
+      padding: 20px;
+    }
+    h1 {
+      color: #00bcd4;
+    }
+    form {
+      margin-bottom: 20px;
+    }
+    input[type="file"],
+    input[type="text"] {
+      padding: 10px;
+      margin: 10px 0;
+      width: 100%;
+      max-width: 500px;
+      border: none;
+      border-radius: 5px;
+    }
+    input[type="submit"] {
+      padding: 10px 20px;
+      background-color: #00bcd4;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      cursor: pointer;
+    }
+    input[type="submit"]:hover {
+      background-color: #0097a7;
+    }
+    .answer {
+      background-color: #1e1e1e;
+      padding: 15px;
+      border-left: 5px solid #00bcd4;
+      border-radius: 5px;
+      margin-top: 20px;
+      white-space: pre-wrap;
+    }
+  </style>
+</head>
+<body>
+  <h1>📄 PDF Q&A Chatbot</h1>
+
+  <!-- Upload PDF -->
+  <form method="POST" enctype="multipart/form-data">
+    <label>Upload a PDF:</label><br>
+    <input type="file" name="pdf" accept=".pdf">
+    <input type="submit" value="Upload & Process">
+  </form>
+
+  <!-- Ask Question -->
+  <form method="POST">
+    <label>Ask a question about the PDF:</label><br>
+    <input type="text" name="question" placeholder="E.g., What is the conclusion?" required>
+    <input type="submit" value="Ask">
+  </form>
+
+  <!-- Show Answer -->
+  {% if answer %}
+    <div class="answer">{{ answer }}</div>
+  {% endif %}
+</body>
+</html>

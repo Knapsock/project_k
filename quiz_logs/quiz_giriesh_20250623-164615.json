@@ -1,0 +1,126 @@
+{
+  "user": "giriesh",
+  "score": 1,
+  "total": 9,
+  "pdf": "1. MEP Cl IV Compiled 24  - color (M) - Copy.pdf",
+  "date": "20250623-164615",
+  "logs": [
+    {
+      "question": "Where should you pay attention while walking underneath for personal safety?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. Shell cleaning area",
+        "B. Anchor and chain area",
+        "C. Ship support structures",
+        "D. Fire line under pressure area"
+      ],
+      "explanation": "You should be cautious around ship support structures."
+    },
+    {
+      "question": "Which of the following situations requires caution due to high-pressure water jets?",
+      "user_answer": "C",
+      "correct_answer": "A",
+      "is_correct": false,
+      "options": [
+        "A. Shell cleaning",
+        "B. Handling anchors and chains",
+        "C. Using fire line under pressure",
+        "D. Operating CO2"
+      ],
+      "explanation": "Shell cleaning with high-pressure water jets can be dangerous."
+    },
+    {
+      "question": "What safety measure is crucial when dealing with direct impact of high-pressure water?",
+      "user_answer": "B",
+      "correct_answer": "D",
+      "is_correct": false,
+      "options": [
+        "A. Proper communication and coordination",
+        "B. Warning notices",
+        "C. Exercise vigilance during lowering anchors and chains",
+        "D. Ensuring fire line under pressure/fire fighting appliances are ready"
+      ],
+      "explanation": "Direct impact of high-pressure water on the body requires safety measures to prevent accidents."
+    },
+    {
+      "question": "What should be done during handling to avoid accidents?",
+      "user_answer": "A",
+      "correct_answer": "D",
+      "is_correct": false,
+      "options": [
+        "A. Take note of ship support structures while walking underneath for personal safety",
+        "B. Exercise caution during shell cleaning with high-pressure water jets",
+        "C. Direct impact of high-pressure water on the body can be dangerous; safety measures are crucial",
+        "D. Ensure proper communication and coordination"
+      ],
+      "explanation": "Proper communication and coordination is necessary to avoid accidents during handling."
+    },
+    {
+      "question": "What is the purpose of warning notices?",
+      "user_answer": "D",
+      "correct_answer": "D",
+      "is_correct": true,
+      "options": [
+        "A. To inform about shell cleaning procedures",
+        "B. To provide guidance on using high-pressure water jets",
+        "C. To ensure safety during anchor and chain operations",
+        "D. To alert crew members about fire line under pressure/fire fighting appliances"
+      ],
+      "explanation": "Warning notices are used to alert crew members about potential hazards, including fire line under pressure/fire fighting appliances."
+    },
+    {
+      "question": "Which item is related to fire safety on a ship?",
+      "user_answer": "B",
+      "correct_answer": "D",
+      "is_correct": false,
+      "options": [
+        "A. Ship support structures",
+        "B. High-pressure water jets",
+        "C. Warning notices",
+        "D. Fire line under pressure/fire fighting appliances"
+      ],
+      "explanation": "Fire line under pressure/fire fighting appliances are used for fire safety on a ship."
+    },
+    {
+      "question": "What is CO2?",
+      "user_answer": "C",
+      "correct_answer": "D",
+      "is_correct": false,
+      "options": [
+        "A. A type of shell cleaning chemical",
+        "B. A high-pressure water jet component",
+        "C. A warning notice",
+        "D. A fire suppression gas"
+      ],
+      "explanation": "CO2 is a fire suppression gas."
+    },
+    {
+      "question": "Why should anchors and chains be lowered with vigilance?",
+      "user_answer": "B",
+      "correct_answer": "D",
+      "is_correct": false,
+      "options": [
+        "A. To avoid accidents during communication and coordination",
+        "B. To ensure the proper use of high-pressure water jets",
+        "C. To take note of ship support structures while walking underneath for personal safety",
+        "D. To lower them carefully as they can be dangerous"
+      ],
+      "explanation": "Anchors and chains should be lowered with vigilance because they can be dangerous."
+    },
+    {
+      "question": "Which safety measure is crucial during the direct impact of high-pressure water?",
+      "user_answer": "B",
+      "correct_answer": "A",
+      "is_correct": false,
+      "options": [
+        "A. Exercise caution during shell cleaning with high-pressure water jets",
+        "B. Exercise vigilance when anchors and chains are being lowered",
+        "C. Ensure proper communication and coordination to avoid accidents during handling",
+        "D. Ensuring fire line under pressure/fire fighting appliances are ready"
+      ],
+      "explanation": "Exercise caution during shell cleaning with high-pressure water jets is a crucial safety measure when dealing with direct impact of high-pressure water."
+    }
+  ]
+}

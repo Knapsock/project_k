@@ -1,0 +1,19 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8" />
+    <title>Chatbot</title>
+</head>
+<body>
+    <h1>Ask Me Anything!</h1>
+    <form method="POST">
+        <input type="text" name="question" placeholder="Type your question here" required />
+        <button type="submit">Submit</button>
+    </form>
+
+    {% if answer %}
+        <h2>Answer:</h2>
+        <p>{{ answer }}</p>
+    {% endif %}
+</body>
+</html>
