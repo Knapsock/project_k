@@ -1,127 +1,131 @@
-from flask import Flask, request, render_template
-import fitz  # PyMuPDF
+from flask import Flask, render_template, request, jsonify
+from langchain_community.document_loaders import PyMuPDFLoader
+from langchain.text_splitter import RecursiveCharacterTextSplitter
+from langchain_community.vectorstores import Chroma
+from langchain_ollama import OllamaEmbeddings, OllamaLLM
 import os
-import pickle
-import requests
-from sentence_transformers import SentenceTransformer
-from sklearn.metrics.pairwise import cosine_similarity
-from utils.quiz_gen import generate_quiz_from_chunks
+import time
+import shutil
 
 app = Flask(__name__)
-model = SentenceTransformer("all-MiniLM-L6-v2")
-VECTOR_STORE = "vector_store/pdf_vectors.pkl"
+vectorstore = None
 
-# Extract text from all pages (without page numbers)
-def extract_pdf_text(pdf_file):
-    text = []
-    with fitz.open(stream=pdf_file.read(), filetype="pdf") as doc:
-        for page in doc:
-            text.append(page.get_text())
-    return text
+# Ensure upload and database directories exist
+os.makedirs("uploads", exist_ok=True)
+os.makedirs("chroma_db", exist_ok=True)
 
-# Chunk text (no metadata)
-def chunk_text(pages, chunk_size=300):
-    chunks = []
-    for page_text in pages:
-        for i in range(0, len(page_text), chunk_size):
-            chunk = page_text[i:i + chunk_size]
-            chunks.append(chunk)
-    return chunks
-
-# Embed chunks and save to vector store
-def embed_and_store_chunks(chunks):
-    embeddings = model.encode(chunks)
-    os.makedirs("vector_store", exist_ok=True)
-    with open(VECTOR_STORE, "wb") as f:
-        pickle.dump((chunks, embeddings), f)
-
-# Load chunks and embeddings safely (support old 3-value format too)
-def load_vector_store():
-    with open(VECTOR_STORE, "rb") as f:
-        data = pickle.load(f)
-        if isinstance(data, tuple) and len(data) == 3:
-            chunks, embeddings, _ = data  # discard metadata
-        else:
-            chunks, embeddings = data
-    return chunks, embeddings
-
-# Get best answer from top-k similar chunks
-def get_best_answer(question, top_k=3):
-    chunks, embeddings = load_vector_store()
-    question_embedding = model.encode([question])
-    similarities = cosine_similarity(question_embedding, embeddings)[0]
-
-    top_indices = similarities.argsort()[-top_k:][::-1]
-    selected_chunks = [chunks[i] for i in top_indices]
-
-    context = "\n\n".join(selected_chunks)
-
-    prompt = f"""
-You are a helpful assistant. Read the content and answer the user's question with an accurate explanation. 
-Then, explain the answer in simple, human-understandable language that even a non-expert can grasp.
-
-Avoid phrases like "According to the document" or "Based on the PDF." Be direct and clear.
-
-If the answer is unclear, respond with:
-"Sorry, i DONT HAVE ANY INFORMATION OF THAT KIND."
-
-Steps:
-1. Analyze the provided content.
-2. Answer the question based on facts.
-3. Then rephrase the answer in a simpler, easy-to-understand version.
-
-Content:
-{context}
-
-Question:
-{question}
-
-Answer:
-"""
-
-
-    response = requests.post(
-        "http://localhost:11434/api/generate",
-        json={
-            "model": "llama3",
-            "prompt": prompt,
-            "stream": False
-        }
-    )
-
-    if response.status_code == 200:
-        return response.json()["response"].strip()
-    else:
-        return "⚠️ Error: Could not get a response from the LLM."
-
-@app.route("/", methods=["GET", "POST"])
+@app.route("/")
 def index():
-    answer = ""
-    if request.method == "POST":
-        question = request.form.get("question", "")
-        pdf = request.files.get("pdf")
+    return render_template("index.html")
 
-        if pdf:
-            pages = extract_pdf_text(pdf)
-            chunks = chunk_text(pages)
-            embed_and_store_chunks(chunks)
-            answer = "✅ PDF uploaded and processed. You can now ask questions or generate a quiz!"
-        elif question:
-            if not os.path.exists(VECTOR_STORE):
-                answer = "⚠️ Please upload a PDF first."
-            else:
-                answer = get_best_answer(question)
-        else:
-            answer = "Please enter a question or upload a PDF."
+@app.route("/upload", methods=["POST"])
+def upload_pdf():
+    global vectorstore
+    
+    # Clear previous uploads and database
+    if os.path.exists("uploads"):
+        shutil.rmtree("uploads")
+    if os.path.exists("chroma_db"):
+        shutil.rmtree("chroma_db")
+    os.makedirs("uploads", exist_ok=True)
+    os.makedirs("chroma_db", exist_ok=True)
+    
+    if 'pdfs' not in request.files:
+        return jsonify({"error": "No file part"}), 400
+        
+    files = request.files.getlist("pdfs")
+    if not files or all(file.filename == '' for file in files):
+        return jsonify({"error": "No selected files"}), 400
 
-    return render_template("index.html", answer=answer)
+    uploaded = []
+    errors = []
+    all_docs = []
 
-@app.route("/quiz")
-def quiz():
-    chunks, _ = load_vector_store()
-    quiz_data = generate_quiz_from_chunks(chunks)
-    return render_template("quiz.html", quiz=quiz_data)
+    for file in files:
+        if not file.filename.lower().endswith('.pdf'):
+            errors.append(f"File {file.filename} is not a PDF")
+            continue
+
+        try:
+            filename = file.filename
+            filepath = os.path.join("uploads", filename)
+            file.save(filepath)
+            
+            # Load and split PDF
+            loader = PyMuPDFLoader(filepath)
+            documents = loader.load()
+            splitter = RecursiveCharacterTextSplitter(
+                chunk_size=1000,
+                chunk_overlap=200,
+                length_function=len
+            )
+            docs = splitter.split_documents(documents)
+            all_docs.extend(docs)
+            uploaded.append(filename)
+        except Exception as e:
+            errors.append(f"Error processing {file.filename}: {str(e)}")
+
+    if all_docs:
+        try:
+            # Create combined vectorstore
+            persist_dir = os.path.join("chroma_db", "combined")
+            embeddings = OllamaEmbeddings(model="nomic-embed-text")
+            vectorstore = Chroma.from_documents(
+                documents=all_docs,
+                embedding=embeddings,
+                persist_directory=persist_dir
+            )
+            vectorstore.persist()
+        except Exception as e:
+            errors.append(f"Error creating vectorstore: {str(e)}")
+
+    response = {
+        "message": f"Successfully processed {len(uploaded)} files" if uploaded else "No files processed",
+        "uploaded": uploaded,
+        "errors": errors
+    }
+    return jsonify(response)
+
+@app.route("/ask", methods=["POST"])
+def ask_question():
+    global vectorstore
+    data = request.get_json()
+    question = data.get("question", "").strip()
+
+    if not question:
+        return jsonify({"error": "Question cannot be empty"}), 400
+    if not vectorstore:
+        return jsonify({"error": "Please upload PDFs first"}), 400
+
+    try:
+        start_time = time.time()
+        
+        # Retrieve relevant documents
+        retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
+        docs = retriever.invoke(question)
+        context = "\n\n".join([doc.page_content for doc in docs])
+
+        # Generate prompt
+        prompt = f"""You are a helpful maritime expert assistant. Answer the question based only on the following context:
+        
+        Context:
+        {context}
+
+        Question: {question}
+
+        Answer in clear, concise terms. If the answer isn't in the context, say you don't know."""
+
+        # Get answer from LLM
+        llm = OllamaLLM(model="llama3")
+        answer = llm.invoke(prompt)
+        
+        return jsonify({
+            "answer": answer.strip(),
+            "time": f"{time.time() - start_time:.2f}s",
+            "sources": [os.path.basename(doc.metadata.get('source', 'unknown')) for doc in docs]
+        })
+    except Exception as e:
+        return jsonify({"error": f"Error processing question: {str(e)}"}), 500
 
 if __name__ == "__main__":
-    app.run(debug=True)
-
+    app.run(host="0.0.0.0", port=5000, debug=True)
