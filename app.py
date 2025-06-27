@@ -2,17 +2,14 @@ from flask import Flask, render_template, request, jsonify
 from langchain_community.document_loaders import PyMuPDFLoader
 from langchain.text_splitter import RecursiveCharacterTextSplitter
 from langchain_community.vectorstores import Chroma
+from langchain.chains import ConversationalRetrievalChain
+from langchain.memory import ConversationBufferMemory
 from langchain_ollama import OllamaEmbeddings, OllamaLLM
 import os
 import time
-import shutil
 
 app = Flask(__name__)
-vectorstore = None
-
-# Ensure upload and database directories exist
-os.makedirs("uploads", exist_ok=True)
-os.makedirs("chroma_db", exist_ok=True)
+vectorstores = []
 
 @app.route("/")
 def index():
@@ -20,112 +17,97 @@ def index():
 
 @app.route("/upload", methods=["POST"])
 def upload_pdf():
-    global vectorstore
-    
-    # Clear previous uploads and database
-    if os.path.exists("uploads"):
-        shutil.rmtree("uploads")
-    if os.path.exists("chroma_db"):
-        shutil.rmtree("chroma_db")
-    os.makedirs("uploads", exist_ok=True)
-    os.makedirs("chroma_db", exist_ok=True)
-    
-    if 'pdfs' not in request.files:
-        return jsonify({"error": "No file part"}), 400
-        
     files = request.files.getlist("pdfs")
-    if not files or all(file.filename == '' for file in files):
-        return jsonify({"error": "No selected files"}), 400
-
     uploaded = []
     errors = []
-    all_docs = []
 
     for file in files:
-        if not file.filename.lower().endswith('.pdf'):
-            errors.append(f"File {file.filename} is not a PDF")
+        if not file.filename.endswith(".pdf"):
             continue
 
+        filename = file.filename
+        filepath = os.path.join("uploads", filename)
+        os.makedirs("uploads", exist_ok=True)
+        file.save(filepath)
+
         try:
-            filename = file.filename
-            filepath = os.path.join("uploads", filename)
-            file.save(filepath)
-            
-            # Load and split PDF
             loader = PyMuPDFLoader(filepath)
             documents = loader.load()
-            splitter = RecursiveCharacterTextSplitter(
-                chunk_size=1000,
-                chunk_overlap=200,
-                length_function=len
-            )
+            if not documents:
+                errors.append(f"❌ No text found in {filename}")
+                continue
+
+            splitter = RecursiveCharacterTextSplitter(chunk_size=1000, chunk_overlap=100)
             docs = splitter.split_documents(documents)
-            all_docs.extend(docs)
+            if not docs:
+                errors.append(f"❌ Failed to split documents in {filename}")
+                continue
+
+            persist_dir = os.path.join("chroma_db", filename)
+            os.makedirs(persist_dir, exist_ok=True)
+
+            embeddings = OllamaEmbeddings(model="nomic-embed-text")
+            vectorstore = Chroma.from_documents(docs, embedding=embeddings, persist_directory=persist_dir)
+            vectorstores.append(vectorstore)
+
             uploaded.append(filename)
         except Exception as e:
-            errors.append(f"Error processing {file.filename}: {str(e)}")
+            errors.append(f"❌ Error processing {filename}: {str(e)}")
 
-    if all_docs:
-        try:
-            # Create combined vectorstore
-            persist_dir = os.path.join("chroma_db", "combined")
-            embeddings = OllamaEmbeddings(model="nomic-embed-text")
-            vectorstore = Chroma.from_documents(
-                documents=all_docs,
-                embedding=embeddings,
-                persist_directory=persist_dir
-            )
-            vectorstore.persist()
-        except Exception as e:
-            errors.append(f"Error creating vectorstore: {str(e)}")
-
-    response = {
-        "message": f"Successfully processed {len(uploaded)} files" if uploaded else "No files processed",
-        "uploaded": uploaded,
-        "errors": errors
-    }
-    return jsonify(response)
+    message = f"✅ Uploaded: {', '.join(uploaded)}" if uploaded else "❌ No files uploaded."
+    return jsonify({"message": message, "errors": errors})
 
 @app.route("/ask", methods=["POST"])
 def ask_question():
-    global vectorstore
     data = request.get_json()
-    question = data.get("question", "").strip()
+    question = data.get("question", "")
 
     if not question:
-        return jsonify({"error": "Question cannot be empty"}), 400
-    if not vectorstore:
-        return jsonify({"error": "Please upload PDFs first"}), 400
+        return jsonify({"error": "Missing question"}), 400
+    if not vectorstores:
+        return jsonify({"error": "No PDFs uploaded"}), 400
 
     try:
-        start_time = time.time()
-        
-        # Retrieve relevant documents
-        retriever = vectorstore.as_retriever(search_kwargs={"k": 3})
-        docs = retriever.invoke(question)
-        context = "\n\n".join([doc.page_content for doc in docs])
+        all_docs = []
+        for store in vectorstores:
+            docs = store.as_retriever().invoke(question)
+            all_docs.extend(docs)
 
-        # Generate prompt
-        prompt = f"""You are a helpful maritime expert assistant. Answer the question based only on the following context:
-        
-        Context:
-        {context}
+        if not all_docs:
+            return jsonify({"answer": "Sorry, I don't have information on that.", "time": "0.00s"})
 
-        Question: {question}
+        context = "\n\n".join(doc.page_content[:1000] for doc in all_docs[:5])  # More context for richer response
 
-        Answer in clear, concise terms. If the answer isn't in the context, say you don't know."""
+        prompt = f"""
+You are a highly knowledgeable and helpful maritime assistant. Answer the user's question in detailed paragraphs using ONLY the following context.
+Avoid generic responses or saying \"According to the document.\"
+If the answer is not found, say \"Sorry, I don't have information on that.\"
 
-        # Get answer from LLM
+Use the following structure:
+1. Begin with a clear and complete answer.
+2. Provide reasoning or explanation in a technical yet understandable manner.
+3. If applicable, list procedures or parts in bullet points.
+
+Context:
+{context}
+
+Question:
+{question}
+
+Answer:
+"""
+
+        start = time.time()
         llm = OllamaLLM(model="llama3")
-        answer = llm.invoke(prompt)
-        
-        return jsonify({
-            "answer": answer.strip(),
-            "time": f"{time.time() - start_time:.2f}s",
-            "sources": [os.path.basename(doc.metadata.get('source', 'unknown')) for doc in docs]
-        })
+        response = llm.invoke(prompt)
+        duration = time.time() - start
+
+        if not response:
+            return jsonify({"answer": "Sorry, I couldn't generate a response.", "time": f"{duration:.2f}s"})
+
+        return jsonify({"answer": response.strip(), "time": f"{duration:.2f}s"})
     except Exception as e:
-        return jsonify({"error": f"Error processing question: {str(e)}"}), 500
+        return jsonify({"error": str(e)}), 500
 
 if __name__ == "__main__":
-    app.run(host="0.0.0.0", port=5000, debug=True)
+    app.run(debug=True)
