@@ -1,25 +1,21 @@
+# Use a lightweight Python base
 FROM python:3.11-slim
-
-# Install system libraries for Tkinter, Pillow, etc.
-RUN apt-get update && apt-get install -y \
-    python3-tk \
-    tcl \
-    tk \
-    libgl1-mesa-glx \
-    libglib2.0-0 \
-    libsm6 \
-    libxext6 \
-    libxrender1 \
-    && apt-get clean
-
 # Set working directory
 WORKDIR /app
-
-# Copy all project files into the container
-COPY . /app
-
+# System dependencies
+RUN apt-get update && apt-get install -y \
+    build-essential \
+    libpoppler-cpp-dev \
+    poppler-utils \
+    curl \
+ && rm -rf /var/lib/apt/lists/*
 # Install Python dependencies
-RUN pip install --no-cache-dir -r requirements.txt
-
-# Run your app (replace with your main Python file if not app.py)
+COPY requirements.txt .
+RUN pip install --no-cache-dir --upgrade pip && \
+    pip install --no-cache-dir -r requirements.txt
+# Copy your app code
+COPY . .
+# Expose Flask port
+EXPOSE 5000
+# Run the app
 CMD ["python", "app.py"]

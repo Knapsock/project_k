@@ -1,9 +1,12 @@
-langchain==0.1.14
-langchain-community==0.0.32
-langchain-ollama==0.0.4
-chromadb==0.4.24
+flask
+flask-cors
+langchain
+langchain-community
+langchain-ollama
+chromadb
 pillow
-tk
 tqdm
 pypdf
+pymupdf
 sqlite-utils
+tk

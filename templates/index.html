@@ -1,72 +1,39 @@
 <!DOCTYPE html>
 <html lang="en">
 <head>
-  <meta charset="UTF-8">
-  <title>📘 Maritime Expert Assistant</title>
-  <link href="https://cdn.jsdelivr.net/npm/bootstrap@5.3.0/dist/css/bootstrap.min.css" rel="stylesheet">
+  <meta charset="UTF-8" />
+  <title>Maritime PDF Chatbot</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background-color: #f9f9f9; }
+    h1 { color: #333; }
+    textarea { width: 100%; padding: 0.5rem; font-size: 1rem; }
+    button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+    #chat-box { margin-top: 1rem; background: #fff; padding: 1rem; border: 1px solid #ccc; white-space: pre-wrap; }
+    #error { color: red; margin-top: 1rem; }
+  </style>
 </head>
-<body class="bg-light">
-  <div class="container mt-5">
-    <h2 class="text-center mb-4">📘 Maritime Expert Assistant</h2>
+<body>
+  <h1>Maritime PDF Chatbot</h1>
 
-    <!-- PDF Upload Form -->
-    <form id="upload-form" enctype="multipart/form-data">
-      <div class="mb-3">
-        <label for="pdfs" class="form-label">Upload PDF(s)</label>
-        <input type="file" class="form-control" id="pdfs" name="pdfs" multiple accept="application/pdf" required>
-      </div>
-      <button type="submit" class="btn btn-primary">Upload PDFs</button>
-    </form>
-    <div id="upload-feedback" class="mt-3"></div>
-    <!-- <div></div> -->
+  <h2>Ask a Question:</h2>
+  <form id="question-form">
+    <textarea id="question" placeholder="Type your question here..." rows="4" required></textarea><br>
+    <button type="submit">Ask</button>
+  </form>
 
-    <hr>
-
-    <!-- Ask Question Form -->
-    <form id="ask-form">
-      <div class="mb-3">
-        <label for="question" class="form-label">Ask a Question</label>
-        <input type="text" class="form-control" id="question" name="question" placeholder="Ask about any uploaded topic..." required>
-      </div>
-      <button type="submit" class="btn btn-success">Ask</button>
-    </form>
-    <div id="answer" class="mt-4 alert alert-info" style="display: none;"></div>
-  </div>
+  <div id="error"></div>
+  <div id="chat-box"></div>
 
   <script>
-    // Upload PDF Handler
-    document.getElementById("upload-form").addEventListener("submit", async (e) => {
+    const form = document.getElementById("question-form");
+    const chatBox = document.getElementById("chat-box");
+    const errorBox = document.getElementById("error");
+
+    form.onsubmit = async (e) => {
       e.preventDefault();
-      const formData = new FormData(document.getElementById("upload-form"));
-      const feedbackBox = document.getElementById("upload-feedback");
-      feedbackBox.innerHTML = '<div class="alert alert-warning">📤 Uploading PDFs...</div>';
-
-      try {
-        const res = await fetch("/upload", { method: "POST", body: formData });
-        const data = await res.json();
-        let html = "";
-
-        if (data.message) {
-          html += `<div class="alert alert-success">${data.message}</div>`;
-        }
-        if (data.errors && data.errors.length > 0) {
-          html += `<div class="alert alert-danger"><ul>${data.errors.map(e => `<li>${e}</li>`).join('')}</ul></div>`;
-        }
-
-        feedbackBox.innerHTML = html;
-      } catch (err) {
-        feedbackBox.innerHTML = `<div class="alert alert-danger">❌ Upload failed: ${err.message}</div>`;
-      }
-    });
-
-    // Ask Question Handler
-    document.getElementById("ask-form").addEventListener("SUBMIT", async (e) => {
-      e.preventDefault();
-      const question = document.getElementById("question").value.trim();
-      const answerBox = document.getElementById("answer");
-      answerBox.className = "mt-4 alert alert-warning";
-      answerBox.innerHTML = "⏳ Getting your answer...";
-      answerBox.style.display = "block";
+      const question = document.getElementById("question").value;
+      chatBox.textContent = "Thinking...";
+      errorBox.textContent = "";
 
       try {
         const res = await fetch("/ask", {
@@ -74,21 +41,18 @@
           headers: { "Content-Type": "application/json" },
           body: JSON.stringify({ question })
         });
-
         const data = await res.json();
-
         if (data.answer) {
-          answerBox.className = "mt-4 alert alert-info";
-          answerBox.innerHTML = `<strong>Answer:</strong><br>${data.answer.replace(/\n/g, '<br>')}<br><small class="text-muted">⏱️ ${data.time}</small>`;
+          chatBox.textContent = data.answer;
         } else {
-          answerBox.className = "mt-4 alert alert-danger";
-          answerBox.textContent = `❌ ${data.error || 'An error occurred'}`;
+          chatBox.textContent = "";
+          errorBox.textContent = data.error || "Failed to get answer.";
         }
       } catch (err) {
-        answerBox.className = "mt-4 alert alert-danger";
-        answerBox.textContent = `❌ Request failed: ${err.message}`;
+        chatBox.textContent = "";
+        errorBox.textContent = "Server error.";
       }
-    });
+    };
   </script>
 </body>
 </html>

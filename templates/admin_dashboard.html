@@ -1,0 +1,79 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Admin Dashboard</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; max-width: 800px; margin: auto; }
+    h2 { margin-bottom: 1rem; }
+    .upload-section, .file-list { margin-top: 2rem; }
+    .error { color: red; }
+    .success { color: green; }
+    .btn { padding: 0.5rem 1rem; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h2>Admin Dashboard</h2>
+  <p><a href="{{ url_for('admin_logout') }}">Logout</a></p>
+
+  <div class="upload-section">
+    <h3>Upload PDFs</h3>
+    <form id="upload-form" method="POST" enctype="multipart/form-data">
+      <input type="file" name="pdfs" multiple required />
+      <button class="btn" type="submit">Upload</button>
+    </form>
+    <div id="upload-status"></div>
+  </div>
+
+  <div class="file-list">
+    <h3>Uploaded Files</h3>
+    <ul id="uploaded-files">
+      <li>Files will show here after upload.</li>
+    </ul>
+  </div>
+
+  <script>
+    document.getElementById("upload-form").addEventListener("submit", async function (e) {
+      e.preventDefault();
+      const formData = new FormData(this);
+      const statusDiv = document.getElementById("upload-status");
+      const list = document.getElementById("uploaded-files");
+      statusDiv.textContent = "Uploading...";
+
+      try {
+        const response = await fetch("/admin/upload", {
+          method: "POST",
+          body: formData
+        });
+
+        const text = await response.text();
+        let data;
+
+        try {
+          data = JSON.parse(text);
+        } catch (jsonErr) {
+          console.error("Response is not JSON:", text);
+          statusDiv.innerHTML = `<p class="error">❌ Server error: Not JSON. Check backend logs.</p>`;
+          return;
+        }
+
+        if (data.success) {
+          statusDiv.innerHTML = `<p class="success">✅ Uploaded: ${data.uploaded.join(", ")}</p>`;
+          list.innerHTML = "";
+          data.uploaded.forEach(file => {
+            const li = document.createElement("li");
+            li.textContent = file;
+            list.appendChild(li);
+          });
+        } else {
+          statusDiv.innerHTML = `<p class="error">❌ Failed: ${data.errors?.join(", ") || "Unknown error"}</p>`;
+        }
+
+      } catch (err) {
+        console.error("Upload failed:", err);
+        statusDiv.innerHTML = `<p class="error">❌ Upload failed. Check console.</p>`;
+      }
+    });
+  </script>
+</body>
+</html>

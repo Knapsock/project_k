@@ -1,0 +1,31 @@
+version: '3.8'
+services:
+  pdf_chatbot:
+    build: .
+    container_name: pdf_chatbot
+    ports:
+      - "5000:5000"
+    volumes:
+      - ./uploads:/app/uploads
+      - ./chroma_db:/app/chroma_db
+      - ./templates:/app/templates
+    environment:
+      - FLASK_ENV=development
+      - OLLAMA_HOST=http://ollama:11434
+    depends_on:
+      - ollama
+    restart: unless-stopped
+  ollama:
+    image: ollama/ollama
+    container_name: ollama
+    ports:
+      - "11434:11434"
+    volumes:
+      - ollama_data:/root/.ollama
+    entrypoint: >
+      /bin/bash -c "
+        ollama serve &
+        sleep 5 &&
+        ollama pull llama3 &&
+        ollama pull nomic-embed-text &&
+        tail -f /dev/null
