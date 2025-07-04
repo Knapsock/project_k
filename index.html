@@ -1,78 +1,51 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-  <meta charset="UTF-8" />
-  <title>Maritime Expert Assistant</title>
-  <style>
-    body { font-family: Arial, sans-serif; margin: 2rem; }
-    .chatbox { max-width: 800px; margin: auto; }
-    .output { white-space: pre-wrap; background: #f2f2f2; padding: 1rem; border-radius: 5px; margin-top: 1rem; }
-  </style>
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        #status { margin-top: 1rem; white-space: pre-wrap; color: darkgreen; }
+        input[type="file"] { margin-bottom: 1em; }
+    </style>
 </head>
 <body>
-  <div class="chatbox">
-    <h2>Ask the Assistant</h2>
-    <form id="ask-form">
-      <input type="text" id="question" placeholder="Ask a question..." style="width: 80%;" required />
-      <button type="submit">Submit</button>
-    </form>
-    <div id="answer" class="output"></div>
+    <h2>Admin PDF Uploader</h2>
+    <input type="file" id="pdfs" multiple>
+    <br>
+    <button onclick="upload()">Upload PDFs</button>
+    <div id="status"></div>
 
-    <hr>
+    <script>
+        async function upload() {
+            const input = document.getElementById("pdfs");
+            const status = document.getElementById("status");
+            const formData = new FormData();
 
-    <h3>Admin PDF Upload</h3>
-    <form id="upload-form" action="/admin/upload" method="post" enctype="multipart/form-data">
-      <input type="file" name="pdfs" multiple required />
-      <button type="submit">Upload PDFs</button>
-    </form>
-    <div id="upload-result" class="output"></div>
-  </div>
+            for (const file of input.files) {
+                formData.append("pdfs", file);
+            }
 
-  <script>
-    document.getElementById("ask-form").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const question = document.getElementById("question").value;
-      const answerDiv = document.getElementById("answer");
-      answerDiv.textContent = "Thinking...";
+            status.textContent = "Uploading...";
 
-      try {
-        const res = await fetch("/ask", {
-          method: "POST",
-          headers: { "Content-Type": "application/json" },
-          body: JSON.stringify({ question }),
-        });
-        const data = await res.json();
-        answerDiv.textContent = data.answer || data.error || "No response.";
-      } catch (err) {
-        answerDiv.textContent = "Failed to contact server.";
-        console.error(err);
-      }
-    });
+            try {
+                const res = await fetch("/admin/upload", {
+                    method: "POST",
+                    body: formData
+                });
 
-    document.getElementById("upload-form").addEventListener("submit", async function (e) {
-      e.preventDefault();
-      const form = e.target;
-      const formData = new FormData(form);
-      const resultDiv = document.getElementById("upload-result");
-      resultDiv.textContent = "Uploading...";
+                const json = await res.json();
+                const output = [];
 
-      try {
-        const res = await fetch(form.action, {
-          method: "POST",
-          body: formData,
-        });
+                if (json.message) output.push(json.message);
+                if (json.errors && json.errors.length > 0) {
+                    output.push("Errors:\n" + json.errors.join("\n"));
+                }
 
-        const data = await res.json();
-        if (data.success) {
-          resultDiv.textContent = `Uploaded: ${data.uploaded.join(", ")}`;
-        } else {
-          resultDiv.textContent = `Errors: ${data.errors?.join(", ") || "Unknown error."}`;
+                status.textContent = output.join("\n\n");
+            } catch (err) {
+                status.textContent = "❌ Upload failed: " + err.message;
+            }
         }
-      } catch (err) {
-        resultDiv.textContent = "Failed to upload PDFs.";
-        console.error(err);
-      }
-    });
-  </script>
+    </script>
 </body>
 </html>
