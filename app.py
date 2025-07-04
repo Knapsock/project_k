@@ -6,6 +6,7 @@ import traceback
 import re
 import warnings
 from flask import Flask, render_template, request, jsonify, session, redirect, url_for
+from flask_cors import CORS
 from werkzeug.utils import secure_filename
 from dotenv import load_dotenv
 from langchain_community.document_loaders import PyMuPDFLoader
@@ -17,7 +18,7 @@ from langchain_ollama import OllamaEmbeddings, OllamaLLM
 # Suppress warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-# Load environment
+# Load .env variables
 load_dotenv()
 FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -27,8 +28,9 @@ FLASK_ENV = os.getenv("FLASK_ENV", "production")
 if not FLASK_SECRET_KEY or not ADMIN_PASSWORD:
     raise RuntimeError("Missing FLASK_SECRET_KEY or ADMIN_PASSWORD in .env file")
 
-# App setup
+# Initialize Flask app
 app = Flask(__name__, template_folder="templates", static_folder="static")
+CORS(app)  # ← Add this to support frontend-backend requests
 app.secret_key = FLASK_SECRET_KEY
 app.config.update({
     "UPLOAD_FOLDER": os.path.abspath("uploads"),
@@ -41,7 +43,7 @@ app.config.update({
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(app.config["CHROMA_DB"], exist_ok=True)
 
-# LLM + Embedding
+# Initialize LLM and embeddings
 try:
     embeddings = OllamaEmbeddings(model="nomic-embed-text", base_url=OLLAMA_HOST)
     llm = OllamaLLM(model="mistral", base_url=OLLAMA_HOST, temperature=0.3, num_predict=200)
@@ -53,7 +55,7 @@ except Exception as e:
 memory = ConversationBufferMemory(memory_key="chat_history", return_messages=True)
 qa_cache = {}
 
-# Load vectorstore
+# Load vector store
 main_vectorstore = None
 main_store_dir = os.path.join(app.config["CHROMA_DB"], "main")
 if os.path.exists(main_store_dir):
@@ -95,7 +97,6 @@ def process_file(path, filename, uploaded, errors):
     try:
         loader = PyMuPDFLoader(path)
         raw_docs = loader.load()
-
         splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=50)
         docs = splitter.split_documents(raw_docs)
         for doc in docs:
