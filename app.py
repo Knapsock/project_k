@@ -14,10 +14,10 @@ from langchain_community.vectorstores import Chroma
 from langchain.memory import ConversationBufferMemory
 from langchain_ollama import OllamaEmbeddings, OllamaLLM
 
-# Suppress LangChain deprecation warnings
+# Suppress warnings
 warnings.filterwarnings("ignore", category=DeprecationWarning)
 
-# Load environment variables
+# Load environment
 load_dotenv()
 FLASK_SECRET_KEY = os.getenv("FLASK_SECRET_KEY")
 ADMIN_PASSWORD = os.getenv("ADMIN_PASSWORD")
@@ -27,7 +27,7 @@ FLASK_ENV = os.getenv("FLASK_ENV", "production")
 if not FLASK_SECRET_KEY or not ADMIN_PASSWORD:
     raise RuntimeError("Missing FLASK_SECRET_KEY or ADMIN_PASSWORD in .env file")
 
-# Flask app setup
+# App setup
 app = Flask(__name__, template_folder="templates", static_folder="static")
 app.secret_key = FLASK_SECRET_KEY
 app.config.update({
@@ -41,7 +41,7 @@ app.config.update({
 os.makedirs(app.config["UPLOAD_FOLDER"], exist_ok=True)
 os.makedirs(app.config["CHROMA_DB"], exist_ok=True)
 
-# LLM & Embedding setup
+# LLM + Embedding
 try:
     embeddings = OllamaEmbeddings(model="nomic-embed-text", base_url=OLLAMA_HOST)
     llm = OllamaLLM(model="mistral", base_url=OLLAMA_HOST, temperature=0.3, num_predict=200)
@@ -98,18 +98,14 @@ def process_file(path, filename, uploaded, errors):
 
         splitter = RecursiveCharacterTextSplitter(chunk_size=600, chunk_overlap=50)
         docs = splitter.split_documents(raw_docs)
-
         for doc in docs:
             doc.metadata["source"] = filename
 
         if main_vectorstore is None:
-            main_vectorstore = Chroma.from_documents(
-                docs,
-                embedding=llm_components["embeddings"],
-                persist_directory=main_store_dir
-            )
+            main_vectorstore = Chroma.from_documents(docs, embedding=llm_components["embeddings"], persist_directory=main_store_dir)
         else:
             main_vectorstore.add_documents(docs)
+
         main_vectorstore.persist()
         uploaded.append(filename)
     except Exception as e:
@@ -166,14 +162,12 @@ def ask_question():
         if llm_components is None:
             return jsonify({"error": "LLM not initialized"}), 500
 
-        try:
-            data = request.get_json(force=True)
-        except Exception as json_err:
-            return jsonify({"error": "Malformed JSON", "message": str(json_err)}), 400
-
+        data = request.get_json(force=True)
         question = data.get("question", "").strip()
         if not question:
             return jsonify({"error": "Question cannot be empty"}), 400
+        if main_vectorstore is None:
+            return jsonify({"error": "No documents loaded"}), 400
 
         def normalize(q):
             q = q.lower().strip()
@@ -182,14 +176,15 @@ def ask_question():
             return q.strip()
 
         cache_key = normalize(question)
-
-        if main_vectorstore is None:
-            return jsonify({"error": "No documents loaded. Please ask admin to upload files."}), 400
-
         if cache_key in qa_cache:
             return jsonify({"answer": qa_cache[cache_key], "cached": True})
 
-        scored = main_vectorstore.similarity_search_with_score(question, k=1)
+        try:
+            scored = main_vectorstore.similarity_search_with_score(question, k=1)
+        except Exception as vec_err:
+            print("[ERROR] Vector search:", vec_err)
+            return jsonify({"error": "Vector search failure"}), 500
+
         relevant_docs = sorted(scored, key=lambda x: x[1])[:1]
         relevant_docs = [doc for doc, _ in relevant_docs]
         context = "\n---\n".join(doc.page_content[:300] for doc in relevant_docs)
@@ -210,20 +205,20 @@ Instructions:
 
 Answer:"""
 
-        start = time.time()
-        response = llm_components["llm"].invoke(prompt).strip()
-        elapsed = time.time() - start
-        print(f"[INFO] Response time: {elapsed:.2f} sec")
+        try:
+            response = llm_components["llm"].invoke(prompt).strip()
+        except Exception as llm_err:
+            print("[ERROR] LLM invoke:", llm_err)
+            return jsonify({"error": "Model response failed"}), 500
 
         qa_cache[cache_key] = response
         return jsonify({"answer": response, "cached": False})
 
     except Exception as e:
-        print("[ERROR] /ask failed:")
+        print("[ERROR] /ask failed:", e)
         traceback.print_exc()
         return jsonify({"error": "Internal server error"}), 500
 
-# Global error handlers
 @app.errorhandler(400)
 def bad_request(error):
     return jsonify({"error": "Bad request", "message": str(error)}), 400
