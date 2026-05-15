@@ -1,0 +1,36 @@
+{
+  "difficulty": "easy",
+  "question": "Describe with a diagram the sea water cooling system of your ship. Name each part and its function.",
+  "options": [
+    "A. Pump, condenser, and cooling tower",
+    "B. Sea strainer, heat exchanger, and cooling tower",
+    "C. Sea pump, boiler, and cooling tower",
+    "D. Sea valve, pump, and cooling tower"
+  ],
+  "answer": "A",
+  "explanation": "The sea water cooling system is responsible for regulating the temperature of water circulating through the ship. The system consists of a pump, a condenser, and a cooling tower. The pump circulates water from the engine room to the condenser, where it is cooled by the cooling tower. The condenser is a heat exchanger that transfers heat from the water to the atmosphere. The cooling tower is a tower that contains water and is used to dissipate heat from the water."
+}
+{
+  "difficulty": "medium",
+  "question": "Describe defects associated with Sea water Cooling system of your ship.",
+  "options": [
+    "A. Leaky pipes and connections",
+    "B. Cavities and air bubbles in the cooling tower",
+    "C. Corrosion and scaling on the cooling tower",
+    "D. All of the above"
+  ],
+  "answer": "D",
+  "explanation": "The Sea water Cooling system of your ship is susceptible to defects such as leaky pipes and connections, cavities and air bubbles in the cooling tower, and corrosion and scaling on the cooling tower. These defects can lead to reduced cooling efficiency, increased wear and tear on the system, and even a complete failure of the system."
+}
+{
+  "difficulty": "hard",
+  "question": "a diagram the sea water cooling system of your ship. Name each part and its function.",
+  "options": [
+    "A. Pump, condenser, and cooling tower",
+    "B. Sea strainer, heat exchanger, and cooling tower",
+    "C. Sea pump, boiler, and cooling tower",
+    "D. Sea valve, pump, and cooling tower"
+  ],
+  "answer": "A",
+  "explanation": "The Sea water Cooling system of your ship consists of a pump, a condenser, and a cooling tower. The pump circulates water from the engine room to the condenser, where it is cooled by the cooling tower. The condenser is a heat exchanger that transfers heat from the water to the atmosphere. The cooling tower is a tower that contains water and is used to dissipate heat from the water."
+}

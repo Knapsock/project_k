@@ -1,0 +1,15 @@
+What is the capital of France?
+A. London
+B. Paris
+C. Berlin
+D. Madrid
+Answer: B
+Reason: Paris is the capital of France.
+
+Which planet is closest to the Sun?
+A. Venus
+B. Mars
+C. Mercury
+D. Jupiter
+Answer: C
+Reason: Mercury is the closest planet to the Sun.

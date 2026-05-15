@@ -1,0 +1,214 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>Admin Dashboard</title>
+  <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css" />
+  <style>
+    :root {
+      --primary-color: #4a6fa5;
+      --secondary-color: #166088;
+      --success-color: #28a745;
+      --error-color: #dc3545;
+      --light-color: #f8f9fa;
+      --dark-color: #343a40;
+      --border-radius: 5px;
+      --box-shadow: 0 2px 10px rgba(0, 0, 0, 0.1);
+    }
+    body {
+      font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+      background-color: #f5f7fa;
+      margin: 0;
+      padding: 0;
+      color: #333;
+    }
+    .container {
+      max-width: 1200px;
+      margin: auto;
+      padding: 2rem;
+    }
+    header {
+      background-color: white;
+      box-shadow: var(--box-shadow);
+      padding: 1rem 2rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    h2 {
+      margin: 0;
+      color: var(--secondary-color);
+    }
+    .logout-btn {
+      color: var(--secondary-color);
+      text-decoration: none;
+      font-weight: bold;
+    }
+    .card {
+      background: white;
+      border-radius: var(--border-radius);
+      box-shadow: var(--box-shadow);
+      padding: 1.5rem;
+      margin-bottom: 2rem;
+    }
+    .file-upload {
+      border: 2px dashed #ddd;
+      border-radius: var(--border-radius);
+      padding: 2rem;
+      text-align: center;
+    }
+    .file-upload input {
+      display: none;
+    }
+    .file-upload label {
+      cursor: pointer;
+      color: var(--primary-color);
+      font-weight: bold;
+    }
+    .btn {
+      background: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.75rem 1.5rem;
+      border-radius: var(--border-radius);
+      cursor: pointer;
+      font-weight: 600;
+      margin-top: 1rem;
+    }
+    .btn:disabled {
+      background-color: #ccc;
+      cursor: not-allowed;
+    }
+    .status-message {
+      margin-top: 1rem;
+      padding: 0.75rem;
+      border-left: 5px solid;
+    }
+    .success {
+      border-color: var(--success-color);
+      color: var(--success-color);
+      background-color: rgba(40, 167, 69, 0.1);
+    }
+    .error {
+      border-color: var(--error-color);
+      color: var(--error-color);
+      background-color: rgba(220, 53, 69, 0.1);
+    }
+    .progress-bar {
+      height: 5px;
+      background: #eee;
+      margin-top: 1rem;
+      border-radius: 5px;
+      overflow: hidden;
+    }
+    .progress {
+      background: var(--primary-color);
+      height: 100%;
+      width: 0%;
+      transition: width 0.3s;
+    }
+  </style>
+</head>
+<body>
+  <header>
+    <h2>Admin Dashboard</h2>
+    <a href="{{ url_for('admin_logout') }}" class="logout-btn">
+      <i class="fas fa-sign-out-alt"></i> Logout
+    </a>
+  </header>
+
+  <div class="container">
+    <div class="card">
+      <h3>Upload PDFs</h3>
+      <form id="upload-form" method="POST" enctype="multipart/form-data" action="{{ url_for('upload_files') }}">
+        <div class="file-upload">
+          <input type="file" name="pdfs" id="pdf-upload" multiple accept=".pdf" />
+          <label for="pdf-upload">
+            <i class="fas fa-cloud-upload-alt"></i><br />
+            Click to select or drag-and-drop PDF files<br />
+            <small>Maximum file size: 250MB each</small>
+          </label>
+        </div>
+        <div id="file-selection"></div>
+        <div class="progress-bar"><div class="progress" id="upload-progress"></div></div>
+        <button class="btn" type="submit" id="upload-btn"><i class="fas fa-upload"></i> Upload</button>
+        <div id="upload-status"></div>
+      </form>
+    </div>
+  </div>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', () => {
+      const uploadForm = document.getElementById("upload-form");
+      const fileUpload = document.getElementById("pdf-upload");
+      const fileSelection = document.getElementById("file-selection");
+      const uploadStatus = document.getElementById("upload-status");
+      const uploadBtn = document.getElementById("upload-btn");
+      const uploadProgress = document.getElementById("upload-progress");
+
+      fileUpload.addEventListener('change', () => {
+        fileSelection.innerHTML = '';
+        if (fileUpload.files.length > 0) {
+          const list = document.createElement('ul');
+          for (const file of fileUpload.files) {
+            const item = document.createElement('li');
+            item.textContent = `${file.name} (${(file.size / 1024 / 1024).toFixed(2)} MB)`;
+            list.appendChild(item);
+          }
+          fileSelection.appendChild(list);
+        }
+      });
+
+      uploadForm.addEventListener("submit", async (e) => {
+        e.preventDefault();
+
+        if (!fileUpload.files.length) {
+          uploadStatus.innerHTML = `<div class="status-message error"><i class="fas fa-exclamation-circle"></i> Please select at least one PDF file.</div>`;
+          return;
+        }
+
+        const formData = new FormData(uploadForm);
+        uploadStatus.innerHTML = '';
+        uploadBtn.disabled = true;
+        uploadBtn.innerHTML = '<i class="fas fa-spinner fa-spin"></i> Uploading...';
+
+        const xhr = new XMLHttpRequest();
+
+        xhr.upload.addEventListener('progress', function(e) {
+          if (e.lengthComputable) {
+            const percent = (e.loaded / e.total) * 100;
+            uploadProgress.style.width = percent + '%';
+          }
+        });
+
+        xhr.onreadystatechange = function() {
+          if (xhr.readyState === 4) {
+            uploadBtn.disabled = false;
+            uploadBtn.innerHTML = '<i class="fas fa-upload"></i> Upload';
+
+            let data;
+            try {
+              data = JSON.parse(xhr.responseText);
+            } catch {
+              uploadStatus.innerHTML = `<div class="status-message error">Upload failed: Server error.</div>`;
+              return;
+            }
+
+            if (data.message) {
+              uploadStatus.innerHTML = `<div class="status-message success">${data.message}</div>`;
+            }
+
+            if (data.errors && data.errors.length > 0) {
+              uploadStatus.innerHTML += `<div class="status-message error">Errors:<br>${data.errors.join("<br>")}</div>`;
+            }
+          }
+        };
+
+        xhr.open("POST", "{{ url_for('upload_files') }}", true);
+        xhr.send(formData);
+      });
+    });
+  </script>
+</body>
+</html>

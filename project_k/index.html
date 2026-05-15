@@ -1,0 +1,51 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Admin Dashboard</title>
+    <style>
+        body { font-family: Arial, sans-serif; margin: 2em; }
+        #status { margin-top: 1rem; white-space: pre-wrap; color: darkgreen; }
+        input[type="file"] { margin-bottom: 1em; }
+    </style>
+</head>
+<body>
+    <h2>Admin PDF Uploader</h2>
+    <input type="file" id="pdfs" multiple>
+    <br>
+    <button onclick="upload()">Upload PDFs</button>
+    <div id="status"></div>
+
+    <script>
+        async function upload() {
+            const input = document.getElementById("pdfs");
+            const status = document.getElementById("status");
+            const formData = new FormData();
+
+            for (const file of input.files) {
+                formData.append("pdfs", file);
+            }
+
+            status.textContent = "Uploading...";
+
+            try {
+                const res = await fetch("/admin/upload", {
+                    method: "POST",
+                    body: formData
+                });
+
+                const json = await res.json();
+                const output = [];
+
+                if (json.message) output.push(json.message);
+                if (json.errors && json.errors.length > 0) {
+                    output.push("Errors:\n" + json.errors.join("\n"));
+                }
+
+                status.textContent = output.join("\n\n");
+            } catch (err) {
+                status.textContent = "❌ Upload failed: " + err.message;
+            }
+        }
+    </script>
+</body>
+</html>

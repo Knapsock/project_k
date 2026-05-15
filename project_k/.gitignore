@@ -1,0 +1,9 @@
+venv/
+__pycache__/
+.env
+chroma_db/
+vector_store/
+uploads/
+quiz_logs/
+stable-diffusion-webui/
+*.pyc

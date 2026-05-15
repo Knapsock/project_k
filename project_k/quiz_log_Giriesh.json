@@ -1,0 +1,27 @@
+{
+  "user": "Giriesh",
+  "score": 3,
+  "logs": [
+    {
+      "question": "Describe defects associated with Sea water Cooling system of your ship.",
+      "selected": "D. All of the above",
+      "correct": "D. All of the above",
+      "is_correct": true,
+      "explanation": "All of the above are potential defects associated with the sea water cooling system. Leakage of cooling water can damage engine components, corrosion can weaken pipes, and air bubbles can reduce the efficiency of the cooling system."
+    },
+    {
+      "question": "Describe with a diagram the sea water cooling system of your ship. Name each part and its function.",
+      "selected": "C. Fresh water tank",
+      "correct": "C. Fresh water tank",
+      "is_correct": true,
+      "explanation": "The fresh water tank is a separate system that supplies water to the cooling system. It is important to isolate the fresh water tank from the rest of the ship to prevent contamination. The seawater intake pipe is responsible for drawing water from the sea and delivering it to the cooling system."
+    },
+    {
+      "question": "Describe with a diagram the sea water cooling system of your ship. Name each part and its function.",
+      "selected": "A. Engine room",
+      "correct": "A. Engine room",
+      "is_correct": true,
+      "explanation": "The sea water cooling system is responsible for removing heat from the engine room and other machinery. It consists of a network of pipes and pumps that circulate water between the engine, boiler, and other components."
+    }
+  ]
+}
