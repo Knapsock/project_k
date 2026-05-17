@@ -7,3 +7,23 @@ uploads/
 quiz_logs/
 stable-diffusion-webui/
 *.pyc
+# Environment
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Vector database
+chroma_db/
+uploads/
+
+# Databases
+*.db
+
+# Backup files
+*.tar.gz
+*.zip
+
+# Logs
+*.log

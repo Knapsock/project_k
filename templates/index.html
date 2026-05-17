@@ -1,0 +1,58 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <title>Maritime PDF Chatbot</title>
+  <style>
+    body { font-family: Arial, sans-serif; padding: 2rem; background-color: #f9f9f9; }
+    h1 { color: #333; }
+    textarea { width: 100%; padding: 0.5rem; font-size: 1rem; }
+    button { padding: 0.5rem 1rem; margin-top: 0.5rem; }
+    #chat-box { margin-top: 1rem; background: #fff; padding: 1rem; border: 1px solid #ccc; white-space: pre-wrap; }
+    #error { color: red; margin-top: 1rem; }
+  </style>
+</head>
+<body>
+  <h1>Maritime PDF Chatbot</h1>
+
+  <h2>Ask a Question:</h2>
+  <form id="question-form">
+    <textarea id="question" placeholder="Type your question here..." rows="4" required></textarea><br>
+    <button type="submit">Ask</button>
+  </form>
+
+  <div id="error"></div>
+  <div id="chat-box"></div>
+
+  <script>
+    const form = document.getElementById("question-form");
+    const chatBox = document.getElementById("chat-box");
+    const errorBox = document.getElementById("error");
+
+    form.onsubmit = async (e) => {
+      e.preventDefault();
+      const question = document.getElementById("question").value;
+      chatBox.textContent = "Thinking...";
+      errorBox.textContent = "";
+
+      try {
+        const res = await fetch("/ask", {
+          method: "POST",
+          headers: { "Content-Type": "application/json" },
+          body: JSON.stringify({ question })
+        });
+        const data = await res.json();
+        if (data.answer) {
+          chatBox.textContent = data.answer;
+        } else {
+          chatBox.textContent = "";
+          errorBox.textContent = data.error || "Failed to get answer.";
+        }
+      } catch (err) {
+        chatBox.textContent = "";
+        errorBox.textContent = "Server error.";
+      }
+    };
+  </script>
+</body>
+</html>

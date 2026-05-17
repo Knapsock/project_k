@@ -1,0 +1,168 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <meta http-equiv="X-UA-Compatible" content="ie=edge">
+  <title>Secure Admin Login</title>
+  <style>
+    :root {
+      --primary-color: #2563eb;
+      --error-color: #dc2626;
+      --success-color: #16a34a;
+      --bg-color: #f8fafc;
+      --card-color: #ffffff;
+      --text-color: #1e293b;
+      --border-color: #e2e8f0;
+    }
+    
+    body {
+      font-family: 'Segoe UI', Roboto, sans-serif;
+      background-color: var(--bg-color);
+      color: var(--text-color);
+      margin: 0;
+      padding: 0;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    
+    .login-container {
+      background-color: var(--card-color);
+      border-radius: 8px;
+      box-shadow: 0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06);
+      padding: 2rem;
+      width: 100%;
+      max-width: 400px;
+    }
+    
+    h2 {
+      margin-top: 0;
+      margin-bottom: 1.5rem;
+      font-size: 1.5rem;
+      font-weight: 600;
+      text-align: center;
+    }
+    
+    .error-message {
+      color: var(--error-color);
+      background-color: rgba(220, 38, 38, 0.1);
+      padding: 0.75rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .success-message {
+      color: var(--success-color);
+      background-color: rgba(22, 163, 74, 0.1);
+      padding: 0.75rem;
+      border-radius: 4px;
+      margin-bottom: 1rem;
+      font-size: 0.875rem;
+    }
+    
+    .form-group {
+      margin-bottom: 1.5rem;
+    }
+    
+    label {
+      display: block;
+      margin-bottom: 0.5rem;
+      font-weight: 500;
+      font-size: 0.875rem;
+    }
+    
+    input[type="password"] {
+      width: 100%;
+      padding: 0.75rem;
+      border: 1px solid var(--border-color);
+      border-radius: 4px;
+      font-size: 1rem;
+      transition: border-color 0.2s;
+    }
+    
+    input[type="password"]:focus {
+      outline: none;
+      border-color: var(--primary-color);
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.1);
+    }
+    
+    button {
+      width: 100%;
+      background-color: var(--primary-color);
+      color: white;
+      border: none;
+      padding: 0.75rem;
+      border-radius: 4px;
+      font-size: 1rem;
+      font-weight: 500;
+      cursor: pointer;
+      transition: background-color 0.2s;
+    }
+    
+    button:hover {
+      background-color: #1d4ed8;
+    }
+    
+    .footer {
+      margin-top: 1.5rem;
+      text-align: center;
+      font-size: 0.75rem;
+      color: #64748b;
+    }
+    
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --bg-color: #0f172a;
+        --card-color: #1e293b;
+        --text-color: #f8fafc;
+        --border-color: #334155;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="login-container">
+    <h2>Admin Portal</h2>
+    
+    {% if error %}
+      <div class="error-message" role="alert">
+        <strong>Error:</strong> {{ error }}
+      </div>
+    {% endif %}
+    
+    {% if message %}
+      <div class="success-message" role="alert">
+        {{ message }}
+      </div>
+    {% endif %}
+    
+    <form method="POST" autocomplete="off">
+      <div class="form-group">
+        <label for="password">Password</label>
+        <input 
+          type="password" 
+          id="password" 
+          name="password" 
+          required
+          aria-describedby="passwordHelp"
+          minlength="8"
+        >
+      </div>
+      
+      <button type="submit">
+        Sign In
+      </button>
+    </form>
+    
+    <div class="footer">
+      <p>Restricted access. Unauthorized use prohibited.</p>
+    </div>
+  </div>
+  
+  <!-- Consider adding CSRF protection in your backend -->
+</body>
+</html>

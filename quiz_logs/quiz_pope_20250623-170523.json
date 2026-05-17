@@ -1,0 +1,126 @@
+{
+  "user": "pope",
+  "score": 1,
+  "total": 9,
+  "pdf": "1. MEP Cl IV Compiled 24  - color (M) - Copy.pdf",
+  "date": "20250623-170523",
+  "logs": [
+    {
+      "question": "What is the term given to the act of filling a ship with water or liquid?",
+      "user_answer": "A",
+      "correct_answer": "B",
+      "is_correct": false,
+      "options": [
+        "A. Flooding down",
+        "B. Flooding up",
+        "C. Ballasting",
+        "D. Drafting"
+      ],
+      "explanation": "Flooding up refers to the process of filling a ship with water or liquid."
+    },
+    {
+      "question": "What is the role of the 'Master' in a maritime context?",
+      "user_answer": "C",
+      "correct_answer": "A",
+      "is_correct": false,
+      "options": [
+        "A. The person responsible for the overall management of a vessel.",
+        "B. A member of the Shipboard Management Team.",
+        "C. The individual who gives the final order to commence flooding.",
+        "D. The Superintendent in charge of the dock."
+      ],
+      "explanation": "The Master is the person responsible for the overall management of a vessel."
+    },
+    {
+      "question": "What is 'draft' in maritime terms?",
+      "user_answer": "D",
+      "correct_answer": "A",
+      "is_correct": false,
+      "options": [
+        "A. The depth of water required to float a ship.",
+        "B. The distance between the keel and the upper deck of a ship.",
+        "C. The height of a ship's mast above the waterline.",
+        "D. The amount of cargo a ship can carry."
+      ],
+      "explanation": "'Draft' in maritime terms refers to the depth of water required to float a ship."
+    },
+    {
+      "question": "What is the purpose of conferring with the Superintendent, Dock Master and Ship Repair Manager before flooding a vessel?",
+      "user_answer": "A",
+      "correct_answer": "A",
+      "is_correct": true,
+      "options": [
+        "A. To confirm that adequate personnel are standing by to check ships spaces for increasing any water.",
+        "B. To discuss the cargo-loading plan for the upcoming voyage.",
+        "C. To determine the most efficient route for the ship's journey.",
+        "D. To decide on the best type of fuel to use for the vessel."
+      ],
+      "explanation": "The purpose of conferring with the Superintendent, Dock Master and Ship Repair Manager before flooding a vessel is to confirm that adequate personnel are standing by to check ships spaces for increasing any water."
+    },
+    {
+      "question": "What does 'just-floats' mean in the context of a ship?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. A state where a ship is about to sink.",
+        "B. A state where a ship can barely float due to insufficient water.",
+        "C. The draft at which a vessel just floats, one foot less than this draft is the point where flooding is suspended.",
+        "D. A state where a ship is loaded beyond its safe carrying capacity."
+      ],
+      "explanation": "'Just-floats' in the context of a ship means the draft at which a vessel just floats, one foot less than this draft is the point where flooding is suspended."
+    },
+    {
+      "question": "What is the role of the Shipboard Management Team in the maritime context?",
+      "user_answer": "C",
+      "correct_answer": "B",
+      "is_correct": false,
+      "options": [
+        "A. To manage and operate the ship's propulsion system.",
+        "B. To ensure the vessel is correctly moored to hold its position once afloat.",
+        "C. To oversee the safety and maintenance of the ship.",
+        "D. To handle the ship's cargo."
+      ],
+      "explanation": "The role of the Shipboard Management Team in the maritime context is to ensure the vessel is correctly moored to hold its position once afloat."
+    },
+    {
+      "question": "What does 'mooring' a ship refer to?",
+      "user_answer": "D",
+      "correct_answer": "A",
+      "is_correct": false,
+      "options": [
+        "A. The act of securing a ship to a dock or quay.",
+        "B. The process of filling a ship with water or liquid.",
+        "C. The act of loading cargo onto a ship.",
+        "D. The act of navigating a ship."
+      ],
+      "explanation": "Mooring a ship refers to the act of securing a ship to a dock or quay."
+    },
+    {
+      "question": "What is the purpose of suspending flooding at a draft which is about one foot less than the draft at which the vessel just-floats?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. To ensure the ship does not sink.",
+        "B. To allow for cargo to be loaded onto the ship.",
+        "C. To prevent water from entering the ship's hull unnecessarily.",
+        "D. To increase the ship's speed."
+      ],
+      "explanation": "The purpose of suspending flooding at a draft which is about one foot less than the draft at which the vessel just-floats is to prevent water from entering the ship's hull unnecessarily."
+    },
+    {
+      "question": "What does 'ballasting' a ship refer to?",
+      "user_answer": "A",
+      "correct_answer": "B",
+      "is_correct": false,
+      "options": [
+        "A. The act of securing a ship to a dock or quay.",
+        "B. The process of filling a ship with water or liquid for stability purposes.",
+        "C. The act of loading cargo onto a ship.",
+        "D. The act of navigating a ship."
+      ],
+      "explanation": "Ballasting a ship refers to the process of filling a ship with water or liquid for stability purposes."
+    }
+  ]
+}

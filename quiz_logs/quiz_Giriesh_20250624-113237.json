@@ -1,0 +1,126 @@
+{
+  "user": "Giriesh",
+  "score": 1,
+  "total": 9,
+  "pdf": "1. MEP Cl IV Compiled 24  - color (M) - Copy.pdf",
+  "date": "20250624-113237",
+  "logs": [
+    {
+      "question": "What device controls the quantity of seawater recirculated based on its temperature?",
+      "user_answer": "A",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. Speed sensor",
+        "B. Pressure sensor",
+        "C. Temperature sensor",
+        "D. Level sensor"
+      ],
+      "explanation": "The device that controls the quantity of seawater recirculated based on its temperature is a temperature sensor."
+    },
+    {
+      "question": "What are four potential issues caused by marine organisms blocking cooling water passages in a ship's system?",
+      "user_answer": "D",
+      "correct_answer": "B",
+      "is_correct": false,
+      "options": [
+        "A. Improved efficiency, reduced risk of loss",
+        "B. Impairing the heat transfer system, overheating of machinery, increased corrosion, and reduced efficiency leading to loss of vessel",
+        "C. Faster speed, better fuel economy",
+        "D. Extended lifespan of pipes, decreased rate of corrosion"
+      ],
+      "explanation": "Marine organisms blocking cooling water passages in a ship's system can lead to impairing the heat transfer system, overheating of machinery, increased corrosion, and reduced efficiency, which may result in loss of the vessel."
+    },
+    {
+      "question": "Which of the following is NOT a potential issue caused by marine organisms blocking cooling water passages in a ship's system?",
+      "user_answer": "C",
+      "correct_answer": "A",
+      "is_correct": false,
+      "options": [
+        "A. Improved heat transfer",
+        "B. Overheating of machinery",
+        "C. Increased lifespan of pipes",
+        "D. Reduced risk of loss"
+      ],
+      "explanation": "Marine organisms blocking cooling water passages in a ship's system does not lead to improved heat transfer, but rather impairs the heat transfer system."
+    },
+    {
+      "question": "Where is the temperature sensor located for controlling the quantity of seawater recirculation?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. At the ship's intake",
+        "B. In the pipes before the pump",
+        "C. At the pump discharge",
+        "D. Inside the machinery"
+      ],
+      "explanation": "The temperature sensor for controlling the quantity of seawater recirculation is located at the pump discharge."
+    },
+    {
+      "question": "What factor may be affected by the overheating of several water-cooled machinery in a ship's system?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. Ship speed",
+        "B. Fuel economy",
+        "C. Rate of corrosion",
+        "D. Lifespan of pipes"
+      ],
+      "explanation": "The overheating of several water-cooled machinery in a ship's system may increase the rate of corrosion."
+    },
+    {
+      "question": "Which of the following is NOT one of the factors that can lead to loss of a vessel due to marine organisms blocking cooling water passages?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. Increased rate of corrosion and thinning of pipes",
+        "B. Reduced efficiency",
+        "C. Improved heat transfer",
+        "D. Extended lifespan of pipes"
+      ],
+      "explanation": "Marine organisms blocking cooling water passages in a ship's system can lead to increased rate of corrosion and thinning of pipes, reduced efficiency, but not improved heat transfer."
+    },
+    {
+      "question": "Which problem is associated with the marine organisms blocking cooling water passages in a ship's system?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. Increased speed",
+        "B. Improved heat transfer",
+        "C. Overheating of machinery",
+        "D. Reduced risk of loss"
+      ],
+      "explanation": "Marine organisms blocking cooling water passages in a ship's system can lead to overheating of machinery."
+    },
+    {
+      "question": "What problem may occur as a result of impaired heat transfer in a ship's system?",
+      "user_answer": "B",
+      "correct_answer": "B",
+      "is_correct": true,
+      "options": [
+        "A. Improved fuel economy",
+        "B. Overheating of machinery",
+        "C. Increased rate of corrosion and thinning of pipes",
+        "D. Reduced risk of loss"
+      ],
+      "explanation": "Impaired heat transfer in a ship's system may lead to overheating of machinery."
+    },
+    {
+      "question": "What problem may result from the increased rate of corrosion and thinning of pipes due to marine organisms blocking cooling water passages in a ship's system?",
+      "user_answer": "B",
+      "correct_answer": "C",
+      "is_correct": false,
+      "options": [
+        "A. Improved fuel economy",
+        "B. Overheating of machinery",
+        "C. Increased risk of loss",
+        "D. Reduced rate of corrosion"
+      ],
+      "explanation": "The increased rate of corrosion and thinning of pipes due to marine organisms blocking cooling water passages in a ship's system may lead to an increased risk of loss."
+    }
+  ]
+}

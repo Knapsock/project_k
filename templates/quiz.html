@@ -1,0 +1,22 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <title>Quiz from PDF</title>
+    <link rel="stylesheet" href="{{ url_for('static', filename='style.css') }}">
+</head>
+<body>
+    <h2>Auto-Generated Quiz</h2>
+    {% for q in quiz %}
+        <div>
+            <strong>Q{{ loop.index }}. {{ q.question }}</strong>
+            <ul>
+                {% for opt in q.options %}
+                    <li>{{ opt }}</li>
+                {% endfor %}
+            </ul>
+            <p><em>Correct Answer: {{ q.answer }}</em></p>
+        </div>
+        <hr>
+    {% endfor %}
+</body>
+</html>
