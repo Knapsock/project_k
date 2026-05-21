@@ -26,4 +26,80 @@ uploads/
 *.zip
 
 # Logs
+*.logvenv/
+__pycache__/
+.env
+chroma_db/
+vector_store/
+uploads/
+quiz_logs/
+stable-diffusion-webui/
+*.pyc
+# Environment
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Vector database
+chroma_db/
+uploads/
+
+# Databases
+*.db
+
+# Backup files
+*.tar.gz
+*.zip
+
+# Logs
+*.logvenv/
+__pycache__/
+.env
+chroma_db/
+vector_store/
+uploads/
+quiz_logs/
+stable-diffusion-webui/
+*.pyc
+# Environment
+.env
+
+# Python cache
+__pycache__/
+*.pyc
+
+# Vector database
+chroma_db/
+uploads/
+
+# Databases
+*.db
+
+# Backup files
+*.tar.gz
+*.zip
+
+# Logs
 *.log
+# Ignore local databases and tracking files
+*.db
+*.sqlite3
+
+# Ignore raw data files and PDFs
+*.pdf
+*.json
+*.jsonl
+*.txt
+*.tar.gz
+
+# Ignore temporary/backup folders
+project_k/
+quiz_logs/
+quiz_questions/
+stable-diffusion-webui/
+
+# Whitelist crucial project configuration files so they ARE tracked
+!README.md
+!requirements.txt
